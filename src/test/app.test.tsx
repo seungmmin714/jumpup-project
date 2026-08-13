@@ -12,7 +12,8 @@ import { useConnectionStore } from '@/store/connectionStore';
 import { usePotStore } from '@/store/potStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { useRoomStore } from '@/store/roomStore';
-import { SHOP_ORDER } from '@/data/roomItems';
+import { SHOP_ORDER } from '@/features/room/roomCatalog';
+import { ROOM_LAYOUT } from '@/features/room/roomLayout';
 
 function renderApp(route = '/') {
   return render(
@@ -430,7 +431,7 @@ describe('토양 게이지 — 식물별 목표 구간 (T-09)', () => {
 
 describe('방 꾸미기 (상점 → 홈)', () => {
   beforeEach(() => {
-    useRoomStore.setState({ owned: {}, placed: {} });
+    useRoomStore.setState({ owned: {}, placed: {}, points: 3000 });
     useCharacterStore.setState({ level: 30 }); // 전 아이템 해금
   });
 
@@ -452,18 +453,18 @@ describe('방 꾸미기 (상점 → 홈)', () => {
     const card = screen.getByText('동그란 러그').closest('div')!;
     fireEvent.click(within(card).getByRole('button', { name: '구매하기' }));
     await flush(100);
-    expect(useRoomStore.getState().placed['growme01']).toContain('rug');
+    expect(useRoomStore.getState().placed['growme01']).toContain('roundRug');
 
     view.unmount();
     renderApp();
-    expect(roomItems()).toContain('/room/rug.png');
+    expect(roomItems()).toContain('/room/round-rug.png');
   });
 
   it('겹침 순서대로 그린다 — 벽 → 선반 → 러그 → 물뿌리개', async () => {
     act(() => {
       useRoomStore.setState({
-        owned: { growme01: ['watering-can', 'rug', 'shelf', 'window'] },
-        placed: { growme01: ['watering-can', 'rug', 'shelf', 'window'] },
+        owned: { growme01: ['wateringCan', 'roundRug', 'shelf', 'window'] },
+        placed: { growme01: ['wateringCan', 'roundRug', 'shelf', 'window'] },
       });
     });
     await connectAndTick();
@@ -474,7 +475,7 @@ describe('방 꾸미기 (상점 → 홈)', () => {
       '/room/base.png',
       '/room/window.png',
       '/room/shelf.png',
-      '/room/rug.png',
+      '/room/round-rug.png',
       '/room/watering-can.png',
     ]);
   });
@@ -505,16 +506,16 @@ describe('방 꾸미기 (상점 → 홈)', () => {
     await connectAndTick();
     renderApp('/shop');
 
-    const names = SHOP_ORDER.map((i) => i.name);
-    expect(names).toEqual(['나무 선반', '물뿌리개', '동그란 러그', '창문', '행잉 플랜트', '액자']);
-    expect(SHOP_ORDER.map((i) => i.requiredLevel)).toEqual([5, 5, 10, 15, 20, 25]);
+    const names = SHOP_ORDER.map((i: { name: string }) => i.name);
+    expect(names).toEqual(['물뿌리개', '나무 선반', '동그란 러그', '창문', '행잉 플랜트', '액자']);
+    expect(SHOP_ORDER.map((i: { requiredLevel: number }) => i.requiredLevel)).toEqual([5, 5, 10, 15, 20, 25]);
 
     // 화면에도 그 순서대로 나온다
     const shown = screen
       .getAllByRole('listitem')
       .map((li) => li.textContent ?? '')
-      .filter((t) => names.some((n) => t.includes(n)));
-    expect(shown[0]).toContain('나무 선반');
+      .filter((t) => names.some((n: string) => t.includes(n)));
+    expect(shown[0]).toContain('물뿌리개');
     expect(shown[shown.length - 1]).toContain('액자');
   });
 
@@ -533,7 +534,7 @@ describe('방 꾸미기 (상점 → 홈)', () => {
 
   it('화분마다 방이 따로 저장된다', async () => {
     act(() => {
-      useRoomStore.setState({ owned: { growme02: ['rug'] }, placed: { growme02: ['rug'] } });
+      useRoomStore.setState({ owned: { growme02: ['roundRug'] }, placed: { growme02: ['roundRug'] } });
     });
     await connectAndTick();
     renderApp();
@@ -546,7 +547,7 @@ describe('연결 시 화분 자동 등록', () => {
   beforeEach(() => {
     // 화분이 하나도 없는 상태에서 시작
     usePotStore.setState({ pots: [], selectedPotId: null });
-    useRoomStore.setState({ owned: {}, placed: {} });
+    useRoomStore.setState({ owned: {}, placed: {}, points: 3000 });
   });
 
   it('연결하면 그 화분이 등록되고 선택된다', async () => {
@@ -577,18 +578,90 @@ describe('연결 시 화분 자동 등록', () => {
 
   it('연결 전에 꾸민 방이 연결 후 그 화분 방으로 옮겨진다', async () => {
     act(() => {
-      useRoomStore.setState({ owned: { 'my-room': ['rug'] }, placed: { 'my-room': ['rug'] } });
+      useRoomStore.setState({ owned: { 'my-room': ['roundRug'] }, placed: { 'my-room': ['roundRug'] } });
     });
 
     await connectAndTick();
 
     const room = useRoomStore.getState();
-    expect(room.placed['growme01']).toEqual(['rug']);
+    expect(room.placed['growme01']).toEqual(['roundRug']);
     expect(room.placed['my-room']).toBeUndefined();
 
     renderApp();
     expect(
       Array.from(document.querySelectorAll('img[src^="/room/"]')).map((el) => el.getAttribute('src')),
-    ).toContain('/room/rug.png');
+    ).toContain('/room/round-rug.png');
+  });
+});
+
+describe('편집기 노출 조건', () => {
+  it('일반 홈 화면에는 편집 UI가 없다', async () => {
+    await connectAndTick();
+    renderApp();
+    expect(screen.queryByText('Room Layout Editor')).toBeNull();
+  });
+
+  it('?roomEditor=true가 없으면 열리지 않는다', async () => {
+    const { isRoomEditorRequested } = await import('@/features/room/RoomEditorGate');
+    window.history.replaceState({}, '', '/?dev=1');
+    expect(isRoomEditorRequested()).toBe(false);
+    window.history.replaceState({}, '', '/');
+  });
+
+  it('개발 서버에서 ?roomEditor=true면 열린다', async () => {
+    const { isRoomEditorRequested } = await import('@/features/room/RoomEditorGate');
+    window.history.replaceState({}, '', '/?roomEditor=true');
+    // vitest는 DEV=true로 돈다 — 프로덕션 빌드에서는 이 분기가 통째로 제거된다
+    expect(import.meta.env.DEV).toBe(true);
+    expect(isRoomEditorRequested()).toBe(true);
+    window.history.replaceState({}, '', '/');
+  });
+});
+
+describe('구매 → 홈 반영 (ROOM_LAYOUT 위치)', () => {
+  beforeEach(() => {
+    useRoomStore.setState({ owned: {}, placed: {}, points: 3000 });
+  });
+
+  it('구매한 아이템이 ROOM_LAYOUT 좌표로 렌더링된다', async () => {
+    await connectAndTick();
+    act(() => {
+      useRoomStore.getState().purchase('growme01', 'shelf', 99);
+    });
+    renderApp();
+
+    const img = document.querySelector('img[data-room-item="shelf"]') as HTMLElement;
+    expect(img).toBeTruthy();
+    const { shelf } = ROOM_LAYOUT;
+    expect(img.style.left).toBe(`${(shelf.x / 1024) * 100}%`);
+    expect(img.style.top).toBe(`${(shelf.y / 768) * 100}%`);
+    expect(img.style.width).toBe(`${(shelf.width / 1024) * 100}%`);
+  });
+
+  it('anchor가 있는 아이템은 transform으로 기준점을 맞춘다', async () => {
+    await connectAndTick();
+    act(() => {
+      useRoomStore.getState().purchase('growme01', 'roundRug', 99);
+    });
+    renderApp();
+
+    const rug = document.querySelector('img[data-room-item="roundRug"]') as HTMLElement;
+    expect(rug.style.transform).toBe('translate(-50%, -100%)');
+
+    const character = document.querySelector('[data-room-item="character"]') as HTMLElement;
+    expect(character.style.transform).toBe('translate(-50%, -100%)');
+  });
+
+  it('구매 즉시 홈에 나타난다 (상점 → 홈)', async () => {
+    await connectAndTick();
+    const view = renderApp('/shop');
+
+    const card = screen.getByText('나무 선반').closest('div')!;
+    fireEvent.click(within(card).getByRole('button', { name: '구매하기' }));
+    await flush(50);
+    view.unmount();
+
+    renderApp();
+    expect(document.querySelector('img[data-room-item="shelf"]')).toBeTruthy();
   });
 });

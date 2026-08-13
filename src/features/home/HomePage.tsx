@@ -11,7 +11,8 @@ import { PillButton, StatChip } from '@/components/StatCard';
 import { PixelIcon } from '@/components/PixelIcon';
 import { SoilGauge } from '@/components/SoilGauge';
 import { CelebrationOverlay } from '@/features/character/Character';
-import { PlantScene } from './PlantScene';
+import { RoomScene } from '@/features/room/RoomScene';
+import { useRoomStore } from '@/store/roomStore';
 import { SolutionCard } from './SolutionCard';
 import { LedSlider } from './LedSlider';
 import { PotPicker } from './PotPicker';
@@ -45,6 +46,8 @@ export default function HomePage() {
   const plant = usePotStore(selectedPlant);
   const pots = usePotStore((s) => s.pots);
   const potId = usePotStore(activePotId);
+  // 구매해서 방에 놓은 아이템만 그린다
+  const placedItems = useRoomStore((s) => s.placed[potId] ?? []);
   const character = useCharacterStore();
 
   useOfflineLatest();
@@ -115,7 +118,7 @@ export default function HomePage() {
       </div>
 
       {/* ③ 캐릭터 방 — 화면에서 가장 큰 영역 */}
-      <PlantScene
+      <RoomScene
         plant={plant}
         mood={mood}
         stale={stale}
@@ -123,7 +126,7 @@ export default function HomePage() {
         speech={wateringSpeech(watering.phase, watering.gainedPct) ?? info.speech}
         caption={stale ? '마지막 기분' : `Lv.${character.level}`}
         watering={watering.phase !== 'idle'}
-        potId={potId}
+        visibleItemIds={placedItems}
       />
 
       {/* 솔루션 카드 — 문제가 있을 때만, 캐릭터 바로 아래에 붙는다 */}

@@ -120,6 +120,7 @@
   }
 
   /* 도트 스프라이트는 보간 없이 그린다 */
+  .pixel-art,
   .pixelated {
     image-rendering: pixelated;
     image-rendering: crisp-edges;

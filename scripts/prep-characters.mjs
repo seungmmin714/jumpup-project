@@ -28,8 +28,11 @@ const DISPLAY_MAX = 512;
 const T_TRANSPARENT = 34;
 /** 이 이상 떨어지면 완전 불투명. 사이 구간은 부드럽게 이어 붙인다 */
 const T_OPAQUE = 72;
-/** 트림할 때 남길 여백 (짧은 변 대비) */
-const TRIM_PAD = 0.02;
+/**
+ * 트림할 때 남길 좌우 여백. 세로는 0이다 —
+ * 발이 PNG 하단에 정확히 닿아야 anchorY:1 배치가 그림과 일치한다.
+ */
+const TRIM_PAD = 0;
 
 const dist = (r1, g1, b1, r2, g2, b2) =>
   Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
@@ -151,7 +154,7 @@ function trimToSquare(png, bounds) {
 
   const out = new PNG({ width: side, height: side, fill: true });
   const offsetX = Math.round((side - cw) / 2);
-  const offsetY = side - ch - pad; // 바닥 정렬
+  const offsetY = side - ch; // 바닥 정렬 — 여백 없이 딱 붙인다
 
   for (let y = 0; y < ch; y += 1) {
     for (let x = 0; x < cw; x += 1) {

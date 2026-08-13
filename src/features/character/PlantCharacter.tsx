@@ -104,7 +104,7 @@ export function PlantCharacter({
   useEffect(() => setFailed(false), [src]);
 
   return (
-    <div className={`relative shrink-0 ${fill ? 'aspect-square h-full' : SIZE[size]}`}>
+    <div className={`relative shrink-0 ${fill ? 'aspect-square w-full' : SIZE[size]}`}>
       {failed ? (
         // 아트가 아직 없을 때의 대체 표정
         <div
@@ -118,7 +118,7 @@ export function PlantCharacter({
         <img
           src={src}
           alt={`${plant.nameKo} 캐릭터: ${info.name}`}
-          className={`pixelated h-full w-full object-contain object-bottom transition-[filter] duration-700 ${
+          className={`pixel-art h-full w-full object-contain object-bottom transition-[filter] duration-700 ${
             celebrating ? 'animate-pop-in' : style.animation
           }`}
           style={{

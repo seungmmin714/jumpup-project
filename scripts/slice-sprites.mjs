@@ -95,6 +95,13 @@ const ROOM_OUT = 'public/room';
 /** 방 카드가 화면에서 약 358px이므로 배경 900px, 가구 240px이면 3배 화면까지 충분하다 */
 const ROOM_BASE_WIDTH = 900;
 const ROOM_ITEM_WIDTH = 240;
+/**
+ * 배치용 가구는 투명 여백을 남기지 않는다.
+ * 여백이 있으면 ROOM_LAYOUT의 x/y/width가 눈에 보이는 그림이 아니라
+ * 여백 포함 상자를 가리키게 되어, 좌표를 맞춰도 계속 어긋난다.
+ * 상점 카드에서 필요한 여백은 CSS로 준다.
+ */
+const TRIM_ROOM_ITEMS = true;
 
 // 배경을 지우고 남는 옅은 잔여물(알파 한 자리~수십)이 셀 가장자리까지 이어져 있으면
 // 트림이 통째로 실패한다. 경계 판정은 넉넉히 불투명한 픽셀만 내용으로 친다.
@@ -412,6 +419,24 @@ if (existsSync(ROOM_SRC)) {
     const max = file === 'base.png' ? ROOM_BASE_WIDTH : ROOM_ITEM_WIDTH;
     shrink(outPath, max);
     console.log(`🏠 ${file.padEnd(22)} → ${max}px, ${Math.round(statSync(outPath).size / 1024)}KB`);
+  }
+}
+
+// 배치용 가구는 투명 여백을 남기지 않는다.
+// 여백이 있으면 ROOM_LAYOUT의 x/y/width가 눈에 보이는 그림이 아니라 여백 포함
+// 상자를 가리키게 되어, 좌표를 아무리 맞춰도 계속 어긋난다.
+// 상점 카드에서 필요한 여백은 CSS로 준다.
+if (existsSync(ROOM_OUT)) {
+  for (const file of readdirSync(ROOM_OUT).filter((f) => f.endsWith('.png') && f !== 'base.png')) {
+    const fp = path.join(ROOM_OUT, file);
+    const png = PNG.sync.read(readFileSync(fp));
+    const b = cellBounds(png, 0, 0, png.width, png.height, 16);
+    if (!b) continue;
+    const trimmed = b.minX === 0 && b.minY === 0 && b.maxX === png.width - 1 && b.maxY === png.height - 1;
+    if (trimmed) continue;
+    const out = toRect(png, 0, 0, b);
+    writeFileSync(fp, PNG.sync.write(out));
+    console.log(`✂️  ${file.padEnd(22)} ${png.width}×${png.height} → ${out.width}×${out.height}`);
   }
 }
 
