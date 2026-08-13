@@ -1,0 +1,20 @@
+{
+  "name": "growme-server",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "description": "그로미 백엔드 — WEB-PRD-v2.0 §12 API 계약",
+  "scripts": {
+    "dev": "node --watch src/index.ts",
+    "start": "node src/index.ts"
+  },
+  "dependencies": {
+    "express": "^4.21.1"
+  },
+  "optionalDependencies": {
+    "pg": "^8.13.1"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}

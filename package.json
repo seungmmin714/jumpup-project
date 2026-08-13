@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "tsc -b --noEmit"
+    "lint": "tsc -b --noEmit",
+    "server": "npm --prefix server start",
+    "server:install": "npm --prefix server install"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -10,6 +10,13 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    // 개발 중에는 /api를 로컬 백엔드(server/)로 넘긴다.
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_PROXY ?? 'http://localhost:4000',
+        changeOrigin: true,
+      },
+    },
   },
   test: {
     globals: true,

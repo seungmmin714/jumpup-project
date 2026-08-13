@@ -16,7 +16,14 @@
 npm install
 cp .env.example .env     # 기본값은 mock 모드
 npm run dev              # http://localhost:5173
+
+# 다른 터미널에서 (일지·행복도·마지막 상태를 보려면 필요)
+npm run server:install
+npm run server           # http://localhost:4000/api
 ```
+
+백엔드는 `DATABASE_URL`이 없으면 **인메모리로 뜬다.** PostgreSQL 없이 바로 실행된다.
+Vite 개발 서버가 `/api`를 `localhost:4000`으로 프록시한다.
 
 하드웨어 없이 전 화면을 검수하려면 **`http://localhost:5173/?dev=1`** 로 접속한다.
 우측 하단 `DEV` 버튼에서 mood 7종·연결상태 7종·센서 결측·물 붓기를 강제 주입할 수 있다.
@@ -55,6 +62,31 @@ src/
   data/plants.ts  식물 도감 = S 명령의 유일한 출처 (§11.4)
   api/          fetch 래퍼 + 업로드 큐
   features/     home · water · journal · catalog · shop · character · dev
+
+server/         백엔드 (§12) — Node + Express, TS를 빌드 없이 실행
+  src/index.ts      라우트 + 입력 검증
+  src/memoryStore.ts / pgStore.ts   저장소 두 구현
+  src/gamify.ts     행복도·EXP·레벨 계산 (서버가 계산한다 — §10.3)
+  src/schema.sql    PostgreSQL DDL
+```
+
+### 서버 API
+
+| 메서드 | 경로 | 설명 |
+|---|---|---|
+| POST | `/api/telemetry` | 센서값 업로드. `(potId, seq, measuredAt)` 중복은 무시 |
+| GET | `/api/pots/:potId/latest` | 마지막 상태 (BLE 미연결 시 화면 소스) |
+| POST | `/api/pots/:potId/care-logs` | 급수·돌봄 기록 |
+| GET | `/api/pots/:potId/care-logs?limit=50` | 일지 타임라인 |
+| GET | `/api/pots/:potId/character` | 레벨·EXP·행복도 |
+| GET | `/api/plants` | 도감 |
+| GET | `/api/health` | 상태 확인 |
+
+PostgreSQL로 붙이려면:
+
+```bash
+createdb growme
+DATABASE_URL=postgres://localhost/growme npm run server   # 스키마는 기동 시 자동 생성
 ```
 
 ---
