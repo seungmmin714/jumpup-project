@@ -415,8 +415,28 @@ if (existsSync(ROOM_SRC)) {
   mkdirSync(ROOM_OUT, { recursive: true });
   for (const file of readdirSync(ROOM_SRC).filter((f) => f.toLowerCase().endsWith('.png'))) {
     const outPath = path.join(ROOM_OUT, file);
-    writeFileSync(outPath, readFileSync(path.join(ROOM_SRC, file)));
-    const max = file === 'base.png' ? ROOM_BASE_WIDTH : ROOM_ITEM_WIDTH;
+    const isBase = file === 'base.png';
+    const png = PNG.sync.read(readFileSync(path.join(ROOM_SRC, file)));
+
+    // 새로 그린 그림이 흰 바탕째 들어오는 경우가 있다. 배경이 통째로 불투명하면 지운다.
+    // base.png는 방 전체 배경이라 건드리지 않는다.
+    // 이미 투명한 그림에 다시 돌리면 모서리의 (0,0,0,0)을 배경색으로 잡아 그림을
+    // 갉아먹으므로, 투명 픽셀이 하나도 없을 때만 실행한다.
+    let opaqueEverywhere = true;
+    for (let i = 3; i < png.data.length; i += 4) {
+      if (png.data[i] < 250) {
+        opaqueEverywhere = false;
+        break;
+      }
+    }
+    if (!isBase && opaqueEverywhere) {
+      removeSheetBackground(png);
+      console.log(`   ↳ ${file}: 불투명 배경 감지 → 제거`);
+    }
+
+    // base는 손댈 게 없으므로 원본 바이트를 그대로 쓴다 (재인코딩하면 용량만 커진다)
+    writeFileSync(outPath, isBase ? readFileSync(path.join(ROOM_SRC, file)) : PNG.sync.write(png));
+    const max = isBase ? ROOM_BASE_WIDTH : ROOM_ITEM_WIDTH;
     shrink(outPath, max);
     console.log(`🏠 ${file.padEnd(22)} → ${max}px, ${Math.round(statSync(outPath).size / 1024)}KB`);
   }
