@@ -22,8 +22,8 @@ export default function PotEntryPage() {
         <span className="text-4xl" aria-hidden>
           🔍
         </span>
-        <p className="font-bold text-olive-800">알 수 없는 화분이에요</p>
-        <p className="text-xs text-olive-500">
+        <p className="font-bold text-ink">알 수 없는 화분이에요</p>
+        <p className="text-xs text-ink-sub">
           QR 주소가 올바른지 확인해 주세요. (예: /p/growme01)
         </p>
         <a className="btn-primary mt-2" href="/">

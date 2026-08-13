@@ -34,13 +34,13 @@ export default function WaterPage() {
       <CelebrationOverlay />
 
       <header className="flex items-center justify-between pt-1">
-        <button type="button" className="tap -ml-2 px-2 text-olive-600" onClick={close}>
+        <button type="button" className="tap -ml-2 px-2 text-ink-sub" onClick={close}>
           ← 닫기
         </button>
-        <span className="text-sm font-bold text-olive-800">
+        <span className="text-sm font-bold text-ink">
           {plant.emoji} {plant.nameKo} 물 주기
         </span>
-        <span className="w-12 text-right text-xs text-olive-400">
+        <span className="w-12 text-right text-xs text-ink-sub">
           {g.fastSamplingOn ? mmss(g.remainingMs) : ''}
         </span>
       </header>
@@ -49,8 +49,8 @@ export default function WaterPage() {
       <Card>
         <SoilGauge soilRaw={g.soilRaw} profile={plant} size="lg" />
         {g.fastSamplingOn ? (
-          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-olive-500">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-state-good" aria-hidden />
+          <p className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-ink-sub">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" aria-hidden />
             1초마다 측정하고 있어요
           </p>
         ) : null}
@@ -65,7 +65,7 @@ export default function WaterPage() {
       {g.phase === 'done' ? <Done g={g} onClose={close} /> : null}
 
       {g.phase !== 'done' && g.phase !== 'static' ? (
-        <p className="mt-auto pb-2 text-center text-[11px] leading-relaxed text-olive-400">
+        <p className="mt-auto pb-2 text-center text-[11px] leading-relaxed text-ink-sub">
           💡 물이 스며들기까지 20~30초 걸려요.
           <br />
           한 번에 붓지 말고 조금씩 나눠서 부어주세요.
@@ -73,7 +73,7 @@ export default function WaterPage() {
       ) : null}
 
       {latest?.soilMoisture !== undefined && g.phase === 'static' ? (
-        <p className="text-center text-[11px] text-olive-400">
+        <p className="text-center text-[11px] text-ink-sub">
           마지막 측정 {fmtPct(latest?.soilMoisture ?? null)} · {timeAgo(latest?.measuredAt)}
         </p>
       ) : null}
@@ -88,7 +88,7 @@ function ConfirmRecent({ g, lastWateredAt }: { g: G; lastWateredAt: string | nul
   return (
     <Card>
       <p className="state-word">방금 물을 줬어요</p>
-      <p className="mt-1 text-sm text-olive-600">
+      <p className="mt-1 text-sm text-ink-sub">
         {timeAgo(lastWateredAt)}에 급수했어요. 흙이 마를 때까지 기다리는 게 좋아요.
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2">
@@ -113,7 +113,7 @@ function StaticMode({ plantMl }: { plantMl: number }) {
       <Card>
         <p className="label">권장 급수량</p>
         <p className="state-word mt-1">약 {plantMl}ml</p>
-        <p className="mt-2 text-sm text-olive-600">
+        <p className="mt-2 text-sm text-ink-sub">
           한 번에 붓지 말고 3번에 나눠, 각 회차 사이에 30초씩 기다려주세요.
         </p>
       </Card>
@@ -126,7 +126,7 @@ function Intro({ g, plantMl }: { g: G; plantMl: number }) {
     <Card>
       <p className="label">이번에 줄 양</p>
       <p className="state-word mt-1">약 {plantMl}ml를 천천히</p>
-      <p className="mt-2 text-sm text-olive-600">
+      <p className="mt-2 text-sm text-ink-sub">
         {TOTAL_ROUNDS}번에 나눠서 부을 거예요. 한 회차에 약 <b>{g.perRoundMl}ml</b>씩,
         붓고 나면 30초 기다렸다가 다시 확인해요.
       </p>
@@ -139,22 +139,22 @@ function Intro({ g, plantMl }: { g: G; plantMl: number }) {
 
 function Pouring({ g }: { g: G }) {
   const tone =
-    g.band === 'wet' ? 'bg-blue-50 ring-blue-200' : g.band === 'good' ? 'bg-olive-50 ring-olive-200' : 'bg-white';
+    g.band === 'wet' ? 'bg-wet/10 ring-wet/30' : g.band === 'good' ? 'bg-primary-soft ring-line' : 'bg-white';
 
   return (
     <>
       <RoundDots round={g.round} />
 
-      <section className={`rounded-2xl p-4 ring-1 ring-olive-100 ${tone}`}>
+      <section className={`rounded-2xl p-4 ring-1 ring-line ${tone}`}>
         {g.band === 'wet' ? (
-          <p className="state-word animate-shake text-state-wet">너무 많아요!</p>
+          <p className="state-word animate-shake text-wet">너무 많아요!</p>
         ) : g.band === 'good' ? (
-          <p className="state-word text-state-good">그만! 딱 좋아요 👏</p>
+          <p className="state-word text-primary">그만! 딱 좋아요 👏</p>
         ) : (
-          <p className="state-word text-state-dry">천천히 부어주세요</p>
+          <p className="state-word text-warn">천천히 부어주세요</p>
         )}
 
-        <p className="mt-1 text-sm text-olive-600">
+        <p className="mt-1 text-sm text-ink-sub">
           {g.band === 'wet'
             ? '물이 너무 많으면 뿌리가 숨을 못 쉬어요. 지금 멈춰주세요.'
             : g.band === 'good'
@@ -163,7 +163,7 @@ function Pouring({ g }: { g: G }) {
         </p>
 
         {g.stalled ? (
-          <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-200">
+          <p className="mt-3 rounded-lg bg-warn/10 px-3 py-2 text-xs text-ink ring-1 ring-warn/30">
             센서 근처까지 물이 닿지 않았을 수 있어요. 화분 중앙에 부어주세요.
           </p>
         ) : null}
@@ -183,7 +183,7 @@ function Soaking({ g }: { g: G }) {
       <RoundDots round={g.round} />
       <Card>
         <p className="state-word">스며드는 중…</p>
-        <p className="mt-1 text-sm text-olive-600">
+        <p className="mt-1 text-sm text-ink-sub">
           물이 센서까지 닿는 데 시간이 걸려요. <b>{Math.ceil(g.soakRemainingMs / 1000)}초</b> 뒤에
           다시 확인할게요.
         </p>
@@ -203,8 +203,8 @@ function Checking({ g }: { g: G }) {
     <>
       <RoundDots round={g.round} />
       <Card>
-        <p className="state-word text-state-dry">아직 조금 부족해요</p>
-        <p className="mt-1 text-sm text-olive-600">
+        <p className="state-word text-warn">아직 조금 부족해요</p>
+        <p className="mt-1 text-sm text-ink-sub">
           현재 토양 {fmtPct(g.soilPct)} · 목표까지 조금 더 필요해요.
         </p>
         <div className="mt-4 grid grid-cols-2 gap-2">
@@ -244,16 +244,16 @@ function Done({ g, onClose }: { g: G; onClose: () => void }) {
         {r.emoji}
       </p>
       <p className="state-word mt-2">{r.title}</p>
-      <p className="mt-1 text-sm text-olive-600">{r.desc}</p>
+      <p className="mt-1 text-sm text-ink-sub">{r.desc}</p>
 
       <dl className="mt-4 grid grid-cols-2 gap-2 text-center">
-        <div className="rounded-xl bg-olive-50 py-2">
+        <div className="rounded-xl bg-primary-soft py-2">
           <dt className="label">주기 전</dt>
-          <dd className="text-lg font-bold text-olive-800">{fmtPct(g.startedPct)}</dd>
+          <dd className="text-lg font-bold text-ink">{fmtPct(g.startedPct)}</dd>
         </div>
-        <div className="rounded-xl bg-olive-50 py-2">
+        <div className="rounded-xl bg-primary-soft py-2">
           <dt className="label">주고 나서</dt>
-          <dd className="text-lg font-bold text-olive-800">{fmtPct(g.soilPct)}</dd>
+          <dd className="text-lg font-bold text-ink">{fmtPct(g.soilPct)}</dd>
         </div>
       </dl>
 
@@ -271,7 +271,7 @@ function RoundDots({ round }: { round: number }) {
         <span
           key={i}
           className={`h-2 rounded-full transition-all ${
-            i + 1 === round ? 'w-6 bg-olive-600' : i + 1 < round ? 'w-2 bg-olive-400' : 'w-2 bg-olive-200'
+            i + 1 === round ? 'w-6 bg-primary' : i + 1 < round ? 'w-2 bg-primary/60' : 'w-2 bg-line'
           }`}
         />
       ))}

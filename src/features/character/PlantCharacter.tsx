@@ -23,43 +23,43 @@ const MOOD_STYLE: Record<Mood, MoodStyle> = {
     filter: 'saturate(1.05)',
     animation: 'animate-bob',
     particles: ['✨', '🌿'],
-    scene: 'from-olive-100 via-cream-100 to-cream-50',
+    scene: 'from-[#dfe9c8] via-[#f0e7cf] to-[#e4d3b0]',
   },
   1: {
     filter: 'saturate(0.6) brightness(0.97)',
     animation: 'animate-droop',
     particles: ['💧'],
-    scene: 'from-orange-100 via-cream-100 to-cream-50',
+    scene: 'from-[#f3e3c4] via-[#f2e6cd] to-[#e4d3b0]',
   },
   2: {
     filter: 'saturate(1.15) hue-rotate(-12deg) brightness(1.05)',
     animation: 'animate-shiver',
     particles: ['💦', '🔥'],
-    scene: 'from-red-100 via-orange-50 to-cream-50',
+    scene: 'from-[#f7dcc8] via-[#f4e4cd] to-[#e4d3b0]',
   },
   3: {
     filter: 'saturate(0.85) hue-rotate(15deg) brightness(0.98)',
     animation: 'animate-shiver',
     particles: ['❄️'],
-    scene: 'from-sky-100 via-cream-100 to-cream-50',
+    scene: 'from-[#d8e6f0] via-[#eee9d8] to-[#e4d3b0]',
   },
   4: {
     filter: 'brightness(0.72) saturate(0.8)',
     animation: 'animate-sleep',
     particles: ['💤'],
-    scene: 'from-indigo-200 via-indigo-50 to-cream-50',
+    scene: 'from-[#c8cbe0] via-[#e2ddd6] to-[#ddcdae]',
   },
   5: {
     filter: 'saturate(0.9) hue-rotate(12deg) brightness(0.96)',
     animation: 'animate-sway',
     particles: ['💧', '💧'],
-    scene: 'from-blue-100 via-sky-50 to-cream-50',
+    scene: 'from-[#d3e4f2] via-[#eae9d9] to-[#e4d3b0]',
   },
   6: {
     filter: 'grayscale(0.8) brightness(0.95)',
     animation: 'animate-glitch',
     particles: ['❓'],
-    scene: 'from-neutral-200 via-neutral-100 to-cream-50',
+    scene: 'from-[#dedcd6] via-[#e9e6dd] to-[#e0d5c0]',
   },
 };
 
@@ -104,17 +104,17 @@ export function PlantCharacter({
       {failed ? (
         // 아트가 아직 없을 때의 대체 표정
         <div
-          className={`flex h-full w-full items-center justify-center rounded-full bg-white/70 ring-4 ring-olive-200 ${style.animation}`}
+          className={`flex h-full w-full items-center justify-center rounded-full bg-card ring-4 ring-primary-soft ${style.animation}`}
           role="img"
           aria-label={`${plant.nameKo} 캐릭터: ${info.name}`}
         >
-          <span className="select-none font-mono text-2xl text-olive-700">{info.face}</span>
+          <span className="select-none font-mono text-2xl text-ink-sub">{info.face}</span>
         </div>
       ) : (
         <img
           src={src}
           alt={`${plant.nameKo} 캐릭터: ${info.name}`}
-          className={`h-full w-full object-contain object-bottom transition-[filter] duration-700 ${
+          className={`pixelated h-full w-full object-contain object-bottom transition-[filter] duration-700 ${
             celebrating ? 'animate-pop-in' : style.animation
           } ${stale ? 'opacity-60' : ''}`}
           style={{ filter: celebrating ? 'saturate(1.2) brightness(1.05)' : style.filter }}
@@ -155,14 +155,14 @@ export function SpeechBubble({ text, tone = 'default' }: { text: string; tone?: 
     <div
       className={`relative max-w-[88%] rounded-2xl px-4 py-2.5 text-center text-sm font-bold leading-snug shadow-sm ring-1 animate-pop-in ${
         tone === 'alert'
-          ? 'bg-white text-orange-800 ring-orange-200'
-          : 'bg-white text-olive-800 ring-olive-100'
+          ? 'bg-card text-ink ring-warn/40'
+          : 'bg-card text-ink ring-line'
       }`}
     >
       {text}
       <span
         className={`absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 ring-1 ${
-          tone === 'alert' ? 'bg-white ring-orange-200' : 'bg-white ring-olive-100'
+          tone === 'alert' ? 'bg-card ring-warn/40' : 'bg-card ring-line'
         }`}
         style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}
         aria-hidden

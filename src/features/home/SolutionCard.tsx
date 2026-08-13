@@ -71,21 +71,21 @@ export function SolutionCard({ mood, onRaiseLed }: Props) {
               <button
                 type="button"
                 onClick={() => toggle(a.label)}
-                className={`tap flex w-full items-center gap-3 rounded-xl bg-white/70 px-3 py-2.5 text-left text-sm transition ${
+                className={`tap flex w-full items-center gap-3 rounded-xl bg-primary-soft/50 px-3 py-2.5 text-left text-sm transition ${
                   done ? 'opacity-50' : ''
                 }`}
               >
                 <span
                   className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-xs ring-1 ${
-                    done ? 'bg-olive-600 text-cream-50 ring-olive-600' : 'bg-white ring-olive-300'
+                    done ? 'bg-primary text-white ring-olive-600' : 'bg-white ring-line'
                   }`}
                   aria-hidden
                 >
                   {done ? '✓' : ''}
                 </span>
                 <span className={done ? 'line-through' : ''}>
-                  <span className="font-semibold text-olive-800">{a.label}</span>
-                  {a.hint ? <span className="ml-1 text-xs text-olive-500">{a.hint}</span> : null}
+                  <span className="font-semibold text-ink">{a.label}</span>
+                  {a.hint ? <span className="ml-1 text-xs text-ink-sub">{a.hint}</span> : null}
                 </span>
               </button>
             </li>
@@ -107,12 +107,12 @@ function OverWaterHint() {
   const hours = soilRaw === null ? null : Math.max(0, Math.round(((plant.soilDry - soilRaw) / 2 / 60) * 10) / 10);
 
   return (
-    <div className="mt-2 rounded-xl bg-white/70 px-3 py-2 text-xs text-olive-700">
+    <div className="mt-2 rounded-xl bg-primary-soft/50 px-3 py-2 text-xs text-ink">
       <p>
         현재 토양 <b>{pct === null ? '--' : `${pct}%`}</b> · 마지막 급수 {timeAgo(lastWateredAt)}
       </p>
       {hours !== null ? (
-        <p className="mt-0.5 text-olive-500">
+        <p className="mt-0.5 text-ink-sub">
           지금 속도라면 약 <b>{hours < 1 ? '1시간 이내' : `${hours}시간 뒤`}</b>에 물을 줄 때가 돼요.
         </p>
       ) : null}

@@ -2,8 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ───────── 디자인 토큰 ─────────
+   색·모양은 전부 여기서 나온다. 화면 코드에는 하드코딩된 색을 두지 않는다. */
 @layer base {
   :root {
+    --bg: #fdf6e9;
+    --card: #ffffff;
+    --card-radius: 20px;
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    --primary: #6b8e23; /* 버튼, 활성 탭 텍스트 */
+    --primary-soft: #e8f0d8; /* 활성 탭 배경, 목표 구간 */
+    --text: #3a3a2e;
+    --text-sub: #8a8a72;
+    --warn: #e8a33d; /* thirsty */
+    --danger: #d9534f; /* critical */
+
+    /* 위 토큰에서 파생된 값들 */
+    --primary-dark: #566f1c;
+    --line: #ece5d3;
+    --wet: #5b9bd5; /* 과습 — 건조(warn)의 반대편 */
+
+    /* 하단 탭바 높이. 본문 아래 여백을 이 값으로 확보한다. */
+    --tabbar-h: 64px;
+
     color-scheme: light;
   }
 
@@ -14,8 +36,9 @@
   }
 
   body {
-    @apply bg-cream-100 text-olive-900 antialiased;
-    /* 모바일 세로 전용 (§14) */
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
   }
@@ -28,36 +51,59 @@
   }
 
   .card {
-    @apply rounded-2xl bg-white/80 p-4 shadow-sm ring-1 ring-olive-100;
+    background: var(--card);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    @apply p-4;
   }
 
   .btn {
-    @apply tap inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
+    @apply tap inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-base font-bold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
   }
 
   .btn-primary {
-    @apply btn bg-olive-600 text-cream-50 shadow-sm;
+    background: var(--primary);
+    color: #fff;
+    @apply btn;
   }
 
   .btn-secondary {
-    @apply btn bg-white text-olive-800 ring-1 ring-olive-200;
+    background: var(--card);
+    color: var(--text);
+    box-shadow: var(--card-shadow);
+    @apply btn;
   }
 
   .btn-ghost {
-    @apply btn bg-transparent text-olive-700;
+    @apply btn bg-transparent;
+    color: var(--text-sub);
+  }
+
+  /* 화면 제목 — 시안의 큼직한 헤더 */
+  .page-title {
+    @apply text-[26px] font-black leading-tight;
+    color: var(--text);
+  }
+
+  .page-sub {
+    @apply text-[13px] font-semibold;
+    color: var(--text-sub);
   }
 
   /* §14 숫자보다 상태 문구를 크게 */
   .state-word {
-    @apply text-2xl font-bold leading-tight;
-  }
-
-  .state-num {
-    @apply text-sm font-medium text-olive-600;
+    @apply text-xl font-extrabold leading-tight;
   }
 
   .label {
-    @apply text-xs font-medium text-olive-500;
+    @apply text-[11px] font-semibold;
+    color: var(--text-sub);
+  }
+
+  /* 도트 스프라이트는 보간 없이 그린다 */
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
   }
 }
 

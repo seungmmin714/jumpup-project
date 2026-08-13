@@ -1,23 +1,19 @@
 import { useState } from 'react';
 import { canUseBle, isIosLike, isMockMode } from '@/ble';
 import { SUPPORTED_PROTO_VER } from '@/ble/constants';
-import {
-  BADGE,
-  ERROR_MESSAGE,
-  isLive,
-  isProtoOk,
-  useConnectionStore,
-} from '@/store/connectionStore';
+import { BADGE, ERROR_MESSAGE, isLive, isProtoOk, useConnectionStore } from '@/store/connectionStore';
 import { connectPot, disconnectPot } from '@/store/bleBridge';
 import { useTelemetryStore } from '@/store/telemetryStore';
-import { Badge, Banner } from './ui';
+import { Banner } from './ui';
 import { durationAgo } from '@/lib/format';
 
+/** ① 연결 상태 + 화분명 — 시안처럼 한 줄로 압축한다 */
 export function ConnectionBadge() {
   const conn = useConnectionStore();
   const source = useTelemetryStore((s) => s.source);
   const [busy, setBusy] = useState(false);
   const live = isLive(conn);
+  const badge = BADGE[conn.state];
 
   const onConnect = async () => {
     if (busy) return;
@@ -31,7 +27,6 @@ export function ConnectionBadge() {
     }
   };
 
-  const badge = BADGE[conn.state];
   const stamp =
     !live && conn.lastPacketAt
       ? durationAgo(Date.now() - conn.lastPacketAt)
@@ -41,30 +36,29 @@ export function ConnectionBadge() {
 
   return (
     <div className="flex items-center justify-between gap-2">
-      <div className="flex min-w-0 items-center gap-2">
-        <Badge tone={badge.tone}>
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              live ? 'bg-olive-600' : conn.state === 'ERROR' ? 'bg-red-500' : 'bg-neutral-400'
-            }`}
-            aria-hidden
-          />
-          {badge.label}
-        </Badge>
-        <span className="truncate text-sm font-semibold text-olive-700">
-          {conn.deviceName ?? (isMockMode() ? 'GROWME01 (시뮬)' : '화분 미연결')}
+      <span
+        className={`inline-flex min-w-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold ${badge.tone}`}
+      >
+        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${badge.dot}`} aria-hidden />
+        {badge.label}
+        <span className="truncate text-ink">
+          {conn.deviceName ?? (isMockMode() ? 'GROWME01' : '화분 미연결')}
         </span>
-        {stamp ? <span className="shrink-0 text-xs text-olive-400">{stamp}</span> : null}
-      </div>
+        {stamp ? <span className="shrink-0 text-ink-sub">· {stamp}</span> : null}
+      </span>
 
       {live ? (
-        <button type="button" className="tap px-2 text-xs text-olive-500" onClick={() => void disconnectPot()}>
+        <button
+          type="button"
+          className="shrink-0 rounded-full px-3 py-1.5 text-[12px] font-bold text-ink-sub"
+          onClick={() => void disconnectPot()}
+        >
           연결 해제
         </button>
       ) : (
         <button
           type="button"
-          className="tap rounded-lg bg-olive-600 px-3 py-1.5 text-xs font-bold text-cream-50 disabled:opacity-40"
+          className="shrink-0 rounded-full bg-primary px-3.5 py-1.5 text-[12px] font-bold text-white disabled:opacity-40"
           onClick={() => void onConnect()}
           disabled={busy || !canUseBle() || conn.state === 'REQUESTING' || conn.state === 'CONNECTING'}
         >
@@ -80,7 +74,7 @@ export function ConnectionBanners() {
   const conn = useConnectionStore();
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 empty:hidden">
       {!isProtoOk(conn) ? (
         <Banner tone="error" title="화분 펌웨어 업데이트가 필요해요">
           이 앱은 프로토콜 v{SUPPORTED_PROTO_VER}만 지원해요. 화분이 v{conn.protoVer}을 사용 중이라

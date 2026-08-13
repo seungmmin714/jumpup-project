@@ -51,11 +51,11 @@ export function FanToggle() {
   };
 
   return (
-    <div className="rounded-xl bg-white/70 px-3 py-2.5">
+    <div className="rounded-xl bg-primary-soft/50 px-3 py-2.5">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-olive-800">🌬 환기팬 강제 가동</p>
-          <p className="text-[11px] text-olive-500">
+          <p className="text-sm font-semibold text-ink">🌬 환기팬 강제 가동</p>
+          <p className="text-[11px] text-ink-sub">
             {on
               ? `${mmss(remaining)} 뒤 자동 제어로 돌아가요`
               : '평소에는 화분이 알아서 켜고 꺼요'}
@@ -69,7 +69,7 @@ export function FanToggle() {
           onClick={toggle}
           disabled={!live || inflight}
           className={`tap relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-40 ${
-            on ? 'bg-olive-600' : 'bg-olive-200'
+            on ? 'bg-primary' : 'bg-line'
           }`}
         >
           <span
@@ -79,7 +79,7 @@ export function FanToggle() {
           />
         </button>
       </div>
-      {error ? <p className="mt-1 text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="mt-1 text-xs text-danger">{error}</p> : null}
     </div>
   );
 }

@@ -4,6 +4,23 @@ export default {
   theme: {
     extend: {
       colors: {
+        // 디자인 토큰 (src/styles/index.css의 :root에 정의)
+        bg: 'var(--bg)',
+        card: 'var(--card)',
+        primary: {
+          DEFAULT: 'var(--primary)',
+          dark: 'var(--primary-dark)',
+          soft: 'var(--primary-soft)',
+        },
+        ink: {
+          DEFAULT: 'var(--text)',
+          sub: 'var(--text-sub)',
+        },
+        warn: 'var(--warn)',
+        danger: 'var(--danger)',
+        line: 'var(--line)',
+        wet: 'var(--wet)',
+
         // §14 디자인 방향: 올리브 그린 + 크림 베이지 (하드웨어 색상 일치)
         olive: {
           50: '#f6f7ef',
@@ -34,6 +51,15 @@ export default {
       },
       fontFamily: {
         sans: ['Pretendard', 'Apple SD Gothic Neo', 'system-ui', 'sans-serif'],
+      },
+      borderRadius: {
+        card: 'var(--card-radius)',
+      },
+      boxShadow: {
+        card: 'var(--card-shadow)',
+      },
+      spacing: {
+        tabbar: 'var(--tabbar-h)',
       },
       keyframes: {
         'pop-in': {

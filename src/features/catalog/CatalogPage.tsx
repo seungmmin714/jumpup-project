@@ -1,5 +1,6 @@
 // T-11 — 도감. 정보 탭이 아니라 **설정 진입점**이다(§11.4).
 // 식물을 고르면 그 행을 S 명령으로 화분에 쓴다.
+// 시안 구성: 썸네일 + 이름/설명 + 지표 행. 선택된 항목만 테두리 강조 + "선택됨".
 
 import { useEffect, useState } from 'react';
 import { cmdQuery, cmdSetProfile } from '@/ble/constants';
@@ -8,7 +9,8 @@ import { PLANTS } from '@/data/plants';
 import { sendCommand } from '@/store/bleBridge';
 import { canControl, useConnectionStore } from '@/store/connectionStore';
 import { profileOf, sameProfile, selectedPlant, usePotStore } from '@/store/potStore';
-import { Badge, Banner, Card, SectionTitle } from '@/components/ui';
+import { Badge, Banner, Card } from '@/components/ui';
+import { PageHeader } from '@/components/AppLayout';
 import { PlantCharacter } from '@/features/character/PlantCharacter';
 import type { Plant } from '@/ble/types';
 
@@ -71,9 +73,14 @@ export default function CatalogPage() {
 
   return (
     <div className="space-y-3">
-      <SectionTitle right={<span className="text-xs text-olive-400">{potId ?? '화분 미선택'}</span>}>
-        식물 도감
-      </SectionTitle>
+      <PageHeader
+        title="식물 도감"
+        right={
+          <span className="shrink-0 text-xs font-bold text-ink-sub">
+            {potId ? potId.toUpperCase() : '화분 미선택'}
+          </span>
+        }
+      />
 
       {mismatch ? (
         <Banner
@@ -94,40 +101,50 @@ export default function CatalogPage() {
         </Banner>
       ) : null}
 
-      {msg ? (
-        <Banner tone={msg.tone === 'error' ? 'error' : 'info'} title={msg.text} />
-      ) : null}
+      {msg ? <Banner tone={msg.tone === 'error' ? 'error' : 'info'} title={msg.text} /> : null}
 
-      <ul className="space-y-2">
+      <ul className="space-y-3">
         {plants.map((p) => {
           const active = p.plantId === current.plantId;
           return (
             <li key={p.plantId}>
-              <Card
-                className={active ? 'ring-2 ring-olive-500' : ''}
-                onClick={() => void apply(p)}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="shrink-0 rounded-2xl bg-olive-50 p-1 ring-1 ring-olive-100">
+              <Card selected={active} onClick={() => void apply(p)}>
+                <div className="flex gap-3">
+                  {/* 썸네일 */}
+                  <div className="flex h-[86px] w-[86px] shrink-0 items-end justify-center rounded-2xl bg-primary-soft">
                     <PlantCharacter plant={p} mood={0} size="md" />
                   </div>
+
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-olive-900">{p.nameKo}</span>
-                      {active ? <Badge>선택됨</Badge> : null}
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-lg font-black leading-tight text-ink">{p.nameKo}</span>
+                      {active ? <Badge tone="primary">선택됨</Badge> : null}
                       {busyId === p.plantId ? (
-                        <span className="text-xs text-olive-400">전송 중…</span>
+                        <span className="shrink-0 text-[11px] text-ink-sub">전송 중…</span>
                       ) : null}
                     </div>
-                    <p className="mt-0.5 text-xs leading-relaxed text-olive-600">{p.description}</p>
-                    <dl className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-olive-500">
-                      <span>
-                        💧 목표 {p.targetMinPct}~{p.targetMaxPct}%
+
+                    <p className="mt-1 text-[11px] leading-relaxed text-ink-sub">{p.description}</p>
+
+                    <dl className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-bold text-ink">
+                      <span className="flex items-center gap-1">
+                        <span className="pixelated" aria-hidden>
+                          💧
+                        </span>
+                        {p.targetMinPct}~{p.targetMaxPct}%
                       </span>
-                      <span>
-                        🌡 {p.tempMinX10 / 10}~{p.tempMaxX10 / 10}℃
+                      <span className="flex items-center gap-1">
+                        <span className="pixelated" aria-hidden>
+                          🌡
+                        </span>
+                        {p.tempMinX10 / 10}~{p.tempMaxX10 / 10}℃
                       </span>
-                      <span>🚿 1회 {p.waterMl}ml</span>
+                      <span className="flex items-center gap-1">
+                        <span className="pixelated" aria-hidden>
+                          🚿
+                        </span>
+                        {p.waterMl}ml
+                      </span>
                     </dl>
                   </div>
                 </div>
@@ -138,7 +155,7 @@ export default function CatalogPage() {
       </ul>
 
       {deviceProfile ? (
-        <p className="pt-1 text-center text-[11px] text-olive-400">
+        <p className="pt-1 text-center text-[11px] text-ink-sub">
           화분 저장값 · dry {deviceProfile.soilDry} / wet {deviceProfile.soilWet} / light{' '}
           {deviceProfile.lightMin}
         </p>

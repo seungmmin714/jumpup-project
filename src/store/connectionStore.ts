@@ -109,14 +109,14 @@ export const isProtoOk = (s: ConnectionStoreState): boolean =>
 /** 제어 명령을 보낼 수 있는가 (§9.2 비활성 규칙) */
 export const canControl = (s: ConnectionStoreState): boolean => isLive(s) && isProtoOk(s);
 
-export const BADGE: Record<ConnectionState, { label: string; tone: string }> = {
-  IDLE: { label: '연결 안 됨', tone: 'bg-neutral-200 text-neutral-700' },
-  REQUESTING: { label: '기기 선택 중', tone: 'bg-cream-200 text-olive-800' },
-  CONNECTING: { label: '연결 중…', tone: 'bg-cream-200 text-olive-800' },
-  CONNECTED: { label: '연결됨', tone: 'bg-olive-200 text-olive-900' },
-  STALE: { label: '동기화 지연', tone: 'bg-amber-200 text-amber-900' },
-  DISCONNECTED: { label: '연결 끊김', tone: 'bg-neutral-200 text-neutral-700' },
-  ERROR: { label: '연결 오류', tone: 'bg-red-200 text-red-900' },
+export const BADGE: Record<ConnectionState, { label: string; tone: string; dot: string }> = {
+  IDLE: { label: '연결 안 됨', tone: 'bg-line text-ink-sub', dot: 'bg-ink-sub' },
+  REQUESTING: { label: '기기 선택 중', tone: 'bg-primary-soft text-primary', dot: 'bg-primary' },
+  CONNECTING: { label: '연결 중…', tone: 'bg-primary-soft text-primary', dot: 'bg-primary' },
+  CONNECTED: { label: '연결됨', tone: 'bg-primary-soft text-primary', dot: 'bg-primary' },
+  STALE: { label: '동기화 지연', tone: 'bg-warn/15 text-warn', dot: 'bg-warn' },
+  DISCONNECTED: { label: '연결 끊김', tone: 'bg-line text-ink-sub', dot: 'bg-ink-sub' },
+  ERROR: { label: '연결 오류', tone: 'bg-danger/15 text-danger', dot: 'bg-danger' },
 };
 
 export const ERROR_MESSAGE: Record<ConnectionErrorKind, { title: string; hint: string }> = {

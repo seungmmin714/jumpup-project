@@ -25,9 +25,9 @@ const OUT_DIR = 'public/characters';
 const DISPLAY_MAX = 512;
 
 /** 배경으로 볼 색과의 거리. 이 이하는 완전 투명 */
-const T_TRANSPARENT = 20;
+const T_TRANSPARENT = 34;
 /** 이 이상 떨어지면 완전 불투명. 사이 구간은 부드럽게 이어 붙인다 */
-const T_OPAQUE = 62;
+const T_OPAQUE = 72;
 /** 트림할 때 남길 여백 (짧은 변 대비) */
 const TRIM_PAD = 0.02;
 

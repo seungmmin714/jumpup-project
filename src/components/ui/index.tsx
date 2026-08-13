@@ -4,15 +4,19 @@ export function Card({
   children,
   className = '',
   onClick,
+  selected = false,
 }: {
   children: ReactNode;
   className?: string;
   onClick?: () => void;
+  selected?: boolean;
 }) {
   const Tag = onClick ? 'button' : 'div';
   return (
     <Tag
-      className={`card w-full text-left ${onClick ? 'active:scale-[0.99] transition' : ''} ${className}`}
+      className={`card w-full text-left ${onClick ? 'transition active:scale-[0.99]' : ''} ${
+        selected ? 'ring-2 ring-primary' : ''
+      } ${className}`}
       {...(onClick ? { onClick, type: 'button' as const } : {})}
     >
       {children}
@@ -22,16 +26,23 @@ export function Card({
 
 export function Badge({
   children,
-  tone = 'bg-olive-200 text-olive-900',
+  tone = 'soft',
   className = '',
 }: {
   children: ReactNode;
-  tone?: string;
+  tone?: 'soft' | 'primary' | 'warn' | 'danger' | 'muted';
   className?: string;
 }) {
+  const tones = {
+    soft: 'bg-primary-soft text-primary',
+    primary: 'bg-primary text-white',
+    warn: 'bg-warn/15 text-warn',
+    danger: 'bg-danger/15 text-danger',
+    muted: 'bg-line text-ink-sub',
+  } as const;
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tone} ${className}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${tones[tone]} ${className}`}
     >
       {children}
     </span>
@@ -50,14 +61,15 @@ export function Banner({
   action?: ReactNode;
 }) {
   const tones = {
-    warn: 'bg-amber-50 ring-amber-200 text-amber-900',
-    error: 'bg-red-50 ring-red-200 text-red-900',
-    info: 'bg-sky-50 ring-sky-200 text-sky-900',
+    warn: 'bg-warn/10 text-ink',
+    error: 'bg-danger/10 text-ink',
+    info: 'bg-primary-soft text-ink',
   } as const;
+  const dot = { warn: 'text-warn', error: 'text-danger', info: 'text-primary' } as const;
   return (
-    <div className={`rounded-xl px-4 py-3 ring-1 ${tones[tone]}`} role="status">
-      <p className="text-sm font-bold">{title}</p>
-      {children ? <div className="mt-1 text-xs leading-relaxed opacity-90">{children}</div> : null}
+    <div className={`rounded-card px-4 py-3 ${tones[tone]}`} role="status">
+      <p className={`text-sm font-bold ${dot[tone]}`}>{title}</p>
+      {children ? <div className="mt-1 text-xs leading-relaxed text-ink-sub">{children}</div> : null}
       {action ? <div className="mt-2">{action}</div> : null}
     </div>
   );
@@ -66,7 +78,7 @@ export function Banner({
 export function SectionTitle({ children, right }: { children: ReactNode; right?: ReactNode }) {
   return (
     <div className="mb-2 flex items-baseline justify-between">
-      <h2 className="text-sm font-bold text-olive-700">{children}</h2>
+      <h2 className="text-sm font-bold text-ink">{children}</h2>
       {right}
     </div>
   );
@@ -74,19 +86,19 @@ export function SectionTitle({ children, right }: { children: ReactNode; right?:
 
 export function EmptyState({ icon, title, hint }: { icon: string; title: string; hint?: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl bg-white/60 px-6 py-12 text-center ring-1 ring-olive-100">
-      <span className="text-4xl" aria-hidden>
+    <div className="card flex flex-col items-center gap-2 py-12 text-center">
+      <span className="pixelated text-4xl" aria-hidden>
         {icon}
       </span>
-      <p className="font-bold text-olive-800">{title}</p>
-      {hint ? <p className="text-xs text-olive-500">{hint}</p> : null}
+      <p className="font-bold text-ink">{title}</p>
+      {hint ? <p className="text-xs text-ink-sub">{hint}</p> : null}
     </div>
   );
 }
 
 export function ProgressBar({
   value,
-  tone = 'bg-olive-500',
+  tone = 'bg-primary',
   className = '',
 }: {
   value: number;
@@ -94,7 +106,7 @@ export function ProgressBar({
   className?: string;
 }) {
   return (
-    <div className={`h-2 w-full overflow-hidden rounded-full bg-olive-100 ${className}`}>
+    <div className={`h-2 w-full overflow-hidden rounded-full bg-primary-soft ${className}`}>
       <div
         className={`h-full rounded-full transition-[width] duration-500 ${tone}`}
         style={{ width: `${Math.min(100, Math.max(0, value))}%` }}

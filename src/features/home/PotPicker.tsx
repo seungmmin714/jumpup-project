@@ -10,10 +10,10 @@ export function PotPicker() {
   if (pots.length <= 1) return null;
 
   return (
-    <label className="flex items-center gap-2 text-xs text-olive-500">
+    <label className="flex items-center gap-2 text-xs text-ink-sub">
       화분
       <select
-        className="tap flex-1 rounded-lg bg-white px-2 py-1.5 text-sm font-semibold text-olive-800 ring-1 ring-olive-200"
+        className="tap flex-1 rounded-lg bg-white px-2 py-1.5 text-sm font-semibold text-ink ring-1 ring-line"
         value={selectedPotId ?? ''}
         onChange={(e) => selectPot(e.target.value)}
       >

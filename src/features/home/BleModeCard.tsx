@@ -31,10 +31,10 @@ export function BleModeCard() {
     <Card>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-bold text-olive-800">
+          <p className="text-sm font-bold text-ink">
             {mode === 'mock' ? '🧪 시뮬레이터 모드' : '📡 실기기 모드'}
           </p>
-          <p className="mt-0.5 text-xs leading-relaxed text-olive-500">
+          <p className="mt-0.5 text-xs leading-relaxed text-ink-sub">
             {mode === 'mock'
               ? '화분 없이 가짜 센서값으로 돌고 있어요. 진짜 화분에 붙이려면 전환하세요.'
               : blocked.length > 0
@@ -44,7 +44,7 @@ export function BleModeCard() {
         </div>
         <button
           type="button"
-          className="tap shrink-0 rounded-lg bg-olive-100 px-3 py-2 text-xs font-bold text-olive-800"
+          className="tap shrink-0 rounded-lg bg-primary-soft px-3 py-2 text-xs font-bold text-ink"
           onClick={() => switchTo(mode === 'mock' ? 'real' : 'mock')}
         >
           {mode === 'mock' ? '실기기로' : '시뮬로'}
@@ -54,11 +54,11 @@ export function BleModeCard() {
       {mode === 'real' && blocked.length > 0 ? (
         <div className="mt-3 space-y-2">
           {blocked.map((d) => (
-            <div key={d.key} className="rounded-xl bg-red-50 px-3 py-2 ring-1 ring-red-200">
-              <p className="text-xs font-bold text-red-900">
+            <div key={d.key} className="rounded-xl bg-danger/10 px-3 py-2 ring-1 ring-danger/25">
+              <p className="text-xs font-bold text-danger">
                 {ICON[d.level]} {d.title}
               </p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-red-800">{d.detail}</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-ink-sub">{d.detail}</p>
             </div>
           ))}
           {blocked.some((d) => d.key === 'context') ? <HttpsHelp /> : null}
@@ -67,7 +67,7 @@ export function BleModeCard() {
 
       <button
         type="button"
-        className="tap mt-2 text-[11px] font-semibold text-olive-400"
+        className="tap mt-2 text-[11px] font-semibold text-ink-sub"
         onClick={() => setOpen((v) => !v)}
       >
         {open ? '진단 접기' : '연결 진단 보기'}
@@ -79,12 +79,12 @@ export function BleModeCard() {
             <li key={d.key} className="flex gap-2 text-[11px] leading-relaxed">
               <span aria-hidden>{ICON[d.level]}</span>
               <span>
-                <b className="text-olive-800">{d.title}</b>
-                <span className="ml-1 text-olive-500">{d.detail}</span>
+                <b className="text-ink">{d.title}</b>
+                <span className="ml-1 text-ink-sub">{d.detail}</span>
               </span>
             </li>
           ))}
-          <li className="pt-1 text-[10px] text-olive-400">
+          <li className="pt-1 text-[10px] text-ink-sub">
             빌드 기본값 <code>VITE_BLE_MODE={envBleMode()}</code>
             {envBleMode() !== mode ? (
               <button
@@ -109,8 +109,8 @@ export function BleModeCard() {
 function HttpsHelp() {
   const host = typeof window === 'undefined' ? '' : window.location.host;
   return (
-    <div className="rounded-xl bg-white/80 px-3 py-2 text-[11px] leading-relaxed text-olive-700 ring-1 ring-olive-200">
-      <p className="font-bold text-olive-800">해결 방법 (하나만 골라도 돼요)</p>
+    <div className="rounded-xl bg-card px-3 py-2 text-[11px] leading-relaxed text-ink ring-1 ring-line">
+      <p className="font-bold text-ink">해결 방법 (하나만 골라도 돼요)</p>
       <ol className="mt-1 list-decimal space-y-1 pl-4">
         <li>
           <b>HTTPS로 띄우기</b> — 개발 PC에서 <code>npm run dev:https</code> 실행 후 휴대폰에서{' '}
