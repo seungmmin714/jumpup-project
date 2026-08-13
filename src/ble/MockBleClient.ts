@@ -341,6 +341,31 @@ export class MockBleClient implements BleClient {
     for (let i = 0; i < count; i += 1) this.feed('D,612,235,55\n');
   }
 
+  /** 시뮬레이션을 초기 상태로 되돌린다 (개발자 패널 · 테스트용) */
+  resetSimulation(): void {
+    this.stopTimers();
+    this.parser.reset();
+    this.soilRaw = 690;
+    this.tempX10 = 235;
+    this.humi = 55;
+    this.lightRaw = 620;
+    this.seq = 0;
+    this.profile = { ...DEFAULT };
+    this.protoVer = SUPPORTED_PROTO_VER;
+    this.fanOn = false;
+    this.ledPct = 0;
+    this.forcedMood = null;
+    this.missing = { soil: false, temp: false, humi: false, light: false };
+    this.pouring = false;
+    this.fastSampling = false;
+    this.lastMood = 0;
+    this.darkMs = 0;
+    this.overWaterMs = 0;
+    this.missStreak = 0;
+    this.state = 'IDLE';
+    this.emitSnapshot();
+  }
+
   snapshot(): MockSnapshot {
     return {
       soilRaw: Math.round(this.soilRaw),

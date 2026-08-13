@@ -12,7 +12,10 @@ export default defineConfig({
     port: 5173,
   },
   test: {
+    globals: true,
+    // 순수 로직은 node, 화면 테스트는 파일 상단의 @vitest-environment 주석으로 jsdom 전환
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    setupFiles: ['./src/test/setup.ts'],
   },
 });

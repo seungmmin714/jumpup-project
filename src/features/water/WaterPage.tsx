@@ -1,6 +1,6 @@
 // T-10 — 급수 가이드 화면. §11.1 플로우 1~6을 단계형 UI로 구성한다.
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SoilGauge } from '@/components/SoilGauge';
 import { Banner, Card, ProgressBar } from '@/components/ui';
@@ -17,8 +17,12 @@ export default function WaterPage() {
   const lastWateredAt = usePotStore((s) => s.lastWateredAt);
   const latest = useTelemetryStore((s) => s.latest);
 
-  // 라우트 이탈 시 R:0 (§11.3)
-  useEffect(() => () => g.exit(), [g]);
+  // 라우트 이탈 시 R:0 (§11.3).
+  // g는 센서값이 바뀔 때마다 새로 만들어지므로 의존성에 넣으면 정리 함수가 매번 돌아
+  // R:1 직후 R:0을 보내버린다. 최신 exit만 ref로 들고 언마운트 때 한 번만 부른다.
+  const exitRef = useRef(g.exit);
+  exitRef.current = g.exit;
+  useEffect(() => () => exitRef.current(), []);
 
   const close = () => {
     g.exit();
