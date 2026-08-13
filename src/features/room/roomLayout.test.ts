@@ -57,10 +57,25 @@ describe('anchor 적용', () => {
     expect(toRoomStyle(box({ anchorX: 0.5, anchorY: 1 })).transform).toBe('translate(-50%, -100%)');
   });
 
-  it('러그와 캐릭터는 같은 가로 기준점을 쓴다', () => {
+  it('러그와 캐릭터는 같은 가로 기준(중앙 정렬)을 쓴다', () => {
+    // 둘 다 중앙 기준이어야 캐릭터가 러그 한가운데 선다.
     expect(ROOM_LAYOUT.roundRug.anchorX).toBe(0.5);
     expect(ROOM_LAYOUT.character.anchorX).toBe(0.5);
-    expect(ROOM_LAYOUT.roundRug.x).toBe(ROOM_LAYOUT.character.x);
+
+    // x는 편집기에서 눈으로 맞춘 값이라 완전히 같지 않을 수 있다.
+    // 눈에 띄는 어긋남(스테이지 폭의 2% 초과)만 잡는다.
+    const gap = Math.abs(ROOM_LAYOUT.roundRug.x - ROOM_LAYOUT.character.x);
+    expect(gap).toBeLessThanOrEqual(ROOM_STAGE.width * 0.02);
+  });
+
+  it('캐릭터 발이 러그 안쪽에 놓인다', () => {
+    const rug = ROOM_LAYOUT.roundRug;
+    const character = ROOM_LAYOUT.character;
+    // 러그도 캐릭터도 anchorY:1이라 y가 곧 바닥선이다.
+    // 캐릭터 발은 러그 바닥선보다 위(작은 y)에 있어야 러그 위에 선 것으로 보인다.
+    expect(character.y).toBeLessThan(rug.y);
+    // 너무 멀리 떨어져 공중에 뜨지 않게
+    expect(rug.y - character.y).toBeLessThan(200);
   });
 
   it('캐릭터는 러그보다 앞에 그려진다', () => {

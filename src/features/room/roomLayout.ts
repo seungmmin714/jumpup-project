@@ -41,19 +41,18 @@ export type RoomLayoutKey =
   | 'character';
 
 /**
- * 확정 좌표. 편집기의 "JSON 복사"로 나온 값을 그대로 붙여 넣는다.
+ * 확정 좌표. 편집기(`?roomEditor=true`)의 "JSON 복사"로 나온 값을 그대로 붙여 넣는다.
  *
- * ⚠️ 아래 값은 아직 눈으로 확정하지 않은 **초기값**이다.
- *    편집기에서 맞춘 뒤 교체할 것.
+ * 눈대중으로 숫자를 고치지 말 것. 어긋나 보이면 편집기에서 다시 맞춰 복사한다.
  */
 export const ROOM_LAYOUT: Record<RoomLayoutKey, RoomLayoutItem> = {
-  window: { x: 40, y: 60, width: 250, zIndex: ROOM_Z.wall },
-  hangingPlant: { x: 700, y: 20, width: 165, zIndex: ROOM_Z.wall },
-  botanicalFrame: { x: 880, y: 60, width: 120, zIndex: ROOM_Z.wall },
-  shelf: { x: 730, y: 330, width: 260, zIndex: ROOM_Z.backFurniture },
-  roundRug: { x: 512, y: 720, width: 520, zIndex: ROOM_Z.rug, anchorX: 0.5, anchorY: 1 },
-  character: { x: 512, y: 690, width: 300, zIndex: ROOM_Z.character, anchorX: 0.5, anchorY: 1 },
-  wateringCan: { x: 90, y: 715, width: 150, zIndex: ROOM_Z.foreground, anchorY: 1 },
+  window: { x: 32, y: 83, width: 290, zIndex: 10 },
+  hangingPlant: { x: 735, y: 23, width: 165, zIndex: 10 },
+  botanicalFrame: { x: 517, y: 60, width: 130, zIndex: 10 },
+  shelf: { x: 695, y: 318, width: 300, zIndex: 15 },
+  roundRug: { x: 500, y: 744, width: 520, zIndex: 20, anchorX: 0.5, anchorY: 1 },
+  character: { x: 502, y: 669, width: 300, zIndex: 30, anchorX: 0.5, anchorY: 1 },
+  wateringCan: { x: 71, y: 677, width: 180, zIndex: 35, anchorY: 1 },
 };
 
 // ───────── 좌표 변환 ─────────
