@@ -8,6 +8,7 @@ import { useTelemetryStore } from '@/store/telemetryStore';
 import { canControl, useConnectionStore } from '@/store/connectionStore';
 import { timeAgo } from '@/lib/format';
 import { toSoilMoisture } from '@/lib/convert';
+import { FanToggle } from './FanToggle';
 import type { Mood } from '@/ble/types';
 
 interface Props {
@@ -35,6 +36,13 @@ export function SolutionCard({ mood, onRaiseLed }: Props) {
   return (
     <section className={`rounded-2xl p-4 ring-1 ${tone.bg} ${tone.ring}`}>
       <h2 className={`text-base font-bold ${tone.text}`}>{info.title}</h2>
+
+      {/* §10.2 HOT — 환기팬 작동 안내 겸 수동 오버라이드(F 명령) */}
+      {mood === 2 ? (
+        <div className="mt-3">
+          <FanToggle />
+        </div>
+      ) : null}
 
       {mood === 5 ? <OverWaterHint /> : null}
 

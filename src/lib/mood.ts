@@ -57,7 +57,6 @@ export const MOOD_TABLE: Record<Mood, MoodInfo> = {
     speech: '너무 더워요!',
     title: '온도를 낮춰주세요',
     actions: [
-      { label: '환기팬이 돌고 있어요', hint: '자동으로 켜졌어요', kind: 'checklist' },
       { label: '창문 열기', kind: 'checklist' },
       { label: '직사광선 피하기', kind: 'checklist' },
       { label: '에어컨·서큘레이터 켜기', kind: 'checklist' },

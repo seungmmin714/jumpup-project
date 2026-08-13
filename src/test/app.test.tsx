@@ -109,6 +109,8 @@ describe('앱 스모크 (Mock BLE)', () => {
       expect(useTelemetryStore.getState().latest?.mood).toBe(mood);
       expect(screen.getByText(speech)).toBeTruthy();
       if (title) expect(screen.getByText(title)).toBeTruthy();
+      // HOT일 때만 환기팬 수동 오버라이드(F 명령)가 노출된다
+      expect(screen.queryByRole('switch', { name: '환기팬 강제 가동' }) !== null).toBe(mood === 2);
     }
   });
 

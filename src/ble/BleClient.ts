@@ -68,6 +68,36 @@ export function chunkForBle(line: string, size = BLE_CHUNK_BYTES): string[] {
   return out;
 }
 
+/** 명령에 개행을 붙인다. 이미 붙어 있으면 그대로. */
+export const withTerminator = (cmd: string): string => (cmd.endsWith('\n') ? cmd : `${cmd}\n`);
+
+type WritableChar = Pick<
+  BluetoothRemoteGATTCharacteristic,
+  'writeValueWithoutResponse' | 'writeValue'
+>;
+
+/**
+ * 한 줄을 20바이트씩 잘라 20ms 간격으로 순차 전송한다(§5.5).
+ * writeValueWithoutResponse가 없는 구형 구현에서는 writeValue로 떨어진다.
+ */
+export async function writeLineInChunks(
+  characteristic: WritableChar,
+  line: string,
+  encoder: TextEncoder = new TextEncoder(),
+  gapMs = CHUNK_INTERVAL_MS,
+): Promise<void> {
+  const chunks = chunkForBle(line);
+  for (let i = 0; i < chunks.length; i += 1) {
+    const bytes = encoder.encode(chunks[i]!);
+    if (characteristic.writeValueWithoutResponse) {
+      await characteristic.writeValueWithoutResponse(bytes);
+    } else {
+      await characteristic.writeValue(bytes);
+    }
+    if (i < chunks.length - 1) await sleep(gapMs);
+  }
+}
+
 function classifyError(e: unknown): ConnectionErrorKind {
   if (!isWebBluetoothSupported()) return 'unsupported';
   const name = (e as { name?: string } | null)?.name ?? '';
@@ -226,17 +256,11 @@ export class WebBleClient implements BleClient {
 
   /** 개행 부착 → 20바이트 분할 → 20ms 간격 순차 전송(§5.5) */
   async send(cmd: string): Promise<void> {
-    const line = cmd.endsWith('\n') ? cmd : `${cmd}\n`;
+    const line = withTerminator(cmd);
     const run = async () => {
       const ch = this.characteristic;
       if (!ch) throw new Error('연결되지 않았습니다');
-      const chunks = chunkForBle(line);
-      for (let i = 0; i < chunks.length; i += 1) {
-        const bytes = this.encoder.encode(chunks[i]!);
-        if (ch.writeValueWithoutResponse) await ch.writeValueWithoutResponse(bytes);
-        else await ch.writeValue(bytes);
-        if (i < chunks.length - 1) await sleep(CHUNK_INTERVAL_MS);
-      }
+      await writeLineInChunks(ch, line, this.encoder);
     };
     // 앞선 전송이 실패해도 체인이 끊기지 않게 한다.
     const next = this.writeChain.then(run, run);
