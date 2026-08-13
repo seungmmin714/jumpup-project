@@ -143,15 +143,34 @@ export default function HomePage() {
       >
         <RoomBackdrop />
 
-        <div className="relative flex flex-col items-center gap-3 px-4 pb-6 pt-5">
+        <div className="relative flex flex-col items-center px-4 pt-5">
           <SpeechBubble text={info.speech} tone={mood === 0 ? 'default' : 'alert'} />
-          <PlantCharacter
-            plant={plant}
-            mood={mood}
-            stale={stale}
-            celebrating={character.celebrating}
-          />
-          <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-[11px] font-bold text-olive-700 ring-1 ring-olive-100">
+
+          {/*
+            캐릭터 아트는 전처리 단계에서 발이 이미지 맨 아래에 오도록 바닥 정렬돼 있다.
+            그래서 이 줄의 아래끝(top-full)이 곧 발이 닿는 바닥선이고,
+            바닥·러그·그림자를 전부 그 선을 기준으로 놓으면 어느 식물이든 어긋나지 않는다.
+          */}
+          <div className="relative mt-3 flex justify-center">
+            {/* 바닥 */}
+            <div className="absolute -left-8 -right-8 top-full h-32 border-t border-cream-300/70 bg-gradient-to-b from-cream-200/80 to-cream-300/40" />
+            {/* 러그 — 발이 타원 한가운데 오도록 */}
+            <span className="absolute left-1/2 top-full h-16 w-64 -translate-x-1/2 -translate-y-1/2 rounded-[50%] bg-cream-200 ring-2 ring-cream-300/60" />
+            <span className="absolute left-1/2 top-full h-10 w-44 -translate-x-1/2 -translate-y-1/2 rounded-[50%] ring-2 ring-cream-300/50" />
+            {/* 발밑 그림자 */}
+            <span className="absolute left-1/2 top-full h-4 w-24 -translate-x-1/2 -translate-y-[55%] rounded-[50%] bg-olive-800/15 blur-[3px]" />
+
+            <div className="relative z-10">
+              <PlantCharacter
+                plant={plant}
+                mood={mood}
+                stale={stale}
+                celebrating={character.celebrating}
+              />
+            </div>
+          </div>
+
+          <div className="relative z-10 mb-5 mt-12 flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1 text-[11px] font-bold text-olive-700 ring-1 ring-olive-100">
             <span aria-hidden>{plant.emoji}</span>
             {plant.nameKo}
             <span className="text-olive-300">·</span>
@@ -223,28 +242,28 @@ export default function HomePage() {
   );
 }
 
-/** 씬 배경 — 창문·선반·러그를 아주 옅게 깔아 방 안 느낌만 준다 */
+/**
+ * 씬의 벽 — 창문과 선반만 아주 옅게 깐다.
+ * 바닥과 러그는 캐릭터 발밑 기준으로 놓아야 해서 여기 두지 않는다.
+ */
 function RoomBackdrop() {
   return (
     <svg
-      viewBox="0 0 360 220"
-      className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.5]"
-      preserveAspectRatio="xMidYMid slice"
+      viewBox="0 0 360 120"
+      className="pointer-events-none absolute inset-x-0 top-0 h-[62%] w-full opacity-50"
+      preserveAspectRatio="xMidYMin slice"
       aria-hidden
     >
       {/* 창문 */}
-      <rect x="30" y="24" width="86" height="72" rx="8" fill="#ffffff" opacity="0.75" />
-      <rect x="30" y="24" width="86" height="72" rx="8" fill="none" stroke="#c7d0a8" strokeWidth="2.5" />
-      <line x1="73" y1="24" x2="73" y2="96" stroke="#c7d0a8" strokeWidth="2" />
-      <line x1="30" y1="60" x2="116" y2="60" stroke="#c7d0a8" strokeWidth="2" />
+      <rect x="26" y="20" width="88" height="74" rx="8" fill="#ffffff" opacity="0.8" />
+      <rect x="26" y="20" width="88" height="74" rx="8" fill="none" stroke="#c7d0a8" strokeWidth="2.5" />
+      <line x1="70" y1="20" x2="70" y2="94" stroke="#c7d0a8" strokeWidth="2" />
+      <line x1="26" y1="57" x2="114" y2="57" stroke="#c7d0a8" strokeWidth="2" />
       {/* 선반 */}
-      <rect x="232" y="52" width="98" height="5" rx="2.5" fill="#d9c9a4" />
-      <circle cx="252" cy="44" r="7" fill="#a0ad5e" opacity="0.7" />
-      <circle cx="276" cy="45" r="6" fill="#849244" opacity="0.6" />
-      <rect x="296" y="36" width="14" height="16" rx="3" fill="#b9c382" opacity="0.7" />
-      {/* 러그 */}
-      <ellipse cx="180" cy="200" rx="118" ry="22" fill="#e9d9ae" opacity="0.7" />
-      <ellipse cx="180" cy="200" rx="92" ry="15" fill="none" stroke="#d0ab63" strokeWidth="2" opacity="0.5" />
+      <rect x="238" y="60" width="96" height="5" rx="2.5" fill="#d9c9a4" />
+      <circle cx="258" cy="52" r="7" fill="#a0ad5e" opacity="0.7" />
+      <circle cx="282" cy="53" r="6" fill="#849244" opacity="0.6" />
+      <rect x="302" y="44" width="14" height="16" rx="3" fill="#b9c382" opacity="0.7" />
     </svg>
   );
 }

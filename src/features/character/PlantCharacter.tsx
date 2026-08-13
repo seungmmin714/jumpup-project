@@ -75,12 +75,13 @@ interface Props {
   celebrating?: boolean;
 }
 
-// 캐릭터 아트는 세로가 긴 2:3 비율이라, object-contain에서 높이가 크기를 결정한다.
-// 정사각 박스를 쓰면 실제로 그려지는 캐릭터가 작아 보여서 세로를 넉넉히 준다.
+// 전처리(scripts/prep-characters.mjs)를 거친 아트는 정사각형이고 발이 아래끝에 맞춰져 있다.
+// 그래서 박스도 정사각으로 두면 박스의 아래끝 = 캐릭터가 딛는 바닥선이 된다.
+// 전처리를 안 거친 세로형 이미지도 object-contain + object-bottom이면 바닥이 맞는다.
 const SIZE = {
-  sm: 'h-16 w-12',
-  md: 'h-28 w-20',
-  lg: 'h-52 w-44',
+  sm: 'h-12 w-12',
+  md: 'h-20 w-20',
+  lg: 'h-44 w-44',
 } as const;
 
 export function PlantCharacter({
@@ -113,7 +114,7 @@ export function PlantCharacter({
         <img
           src={src}
           alt={`${plant.nameKo} 캐릭터: ${info.name}`}
-          className={`h-full w-full object-contain transition-[filter] duration-700 ${
+          className={`h-full w-full object-contain object-bottom transition-[filter] duration-700 ${
             celebrating ? 'animate-pop-in' : style.animation
           } ${stale ? 'opacity-60' : ''}`}
           style={{ filter: celebrating ? 'saturate(1.2) brightness(1.05)' : style.filter }}
@@ -137,7 +138,7 @@ function Particles({ icons }: { icons: string[] }) {
           className="absolute animate-float-away text-lg"
           style={{
             left: `${18 + i * 34}%`,
-            bottom: '58%',
+            bottom: '62%',
             animationDelay: `${i * 700}ms`,
           }}
         >
