@@ -6,7 +6,8 @@ import { parseQueryAck } from '@/ble/parser';
 import { uploadTelemetry } from '@/api/telemetry';
 import { useConnectionStore } from './connectionStore';
 import { useTelemetryStore } from './telemetryStore';
-import { profileOf, selectedPlant, usePotStore } from './potStore';
+import { DEFAULT_POT_ID, profileOf, selectedPlant, usePotStore } from './potStore';
+import { useRoomStore } from './roomStore';
 import { useCharacterStore } from './characterStore';
 import type { AckCode, PlantProfile } from '@/ble/types';
 
@@ -29,7 +30,10 @@ export function attachBleBridge(): () => void {
       useConnectionStore.getState().setState(state, err ?? null);
       useConnectionStore.getState().setDeviceName(client.getDeviceName());
 
-      if (state === 'CONNECTED') void onConnected();
+      if (state === 'CONNECTED') {
+        registerConnectedPot(client.getDeviceName());
+        void onConnected();
+      }
       if (state === 'IDLE') {
         useTelemetryStore.getState().reset();
         useConnectionStore.getState().setDeviceProfile(null);
@@ -90,6 +94,22 @@ export function attachBleBridge(): () => void {
     for (const u of unsubs) u();
     attached = false;
   };
+}
+
+/**
+ * 연결한 화분을 목록에 등록하고 선택한다.
+ * 이걸 하지 않으면 연결돼 있는데도 potId가 없어서 홈에는 "등록된 화분이 없어요"가,
+ * 상점에는 "먼저 화분을 선택해 주세요"가 뜬다.
+ */
+function registerConnectedPot(deviceName: string | null): void {
+  if (!deviceName) return;
+  const potId = deviceName.trim().toLowerCase();
+  const pot = usePotStore.getState();
+  if (pot.selectedPotId === potId) return;
+
+  pot.addPot(potId, deviceName);
+  // 연결 전에 꾸며 둔 방이 있으면 그대로 가져온다
+  useRoomStore.getState().adoptRoom(DEFAULT_POT_ID, potId);
 }
 
 /**

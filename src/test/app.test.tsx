@@ -541,3 +541,54 @@ describe('방 꾸미기 (상점 → 홈)', () => {
     expect(roomItems()).toEqual(['/room/base.png']);
   });
 });
+
+describe('연결 시 화분 자동 등록', () => {
+  beforeEach(() => {
+    // 화분이 하나도 없는 상태에서 시작
+    usePotStore.setState({ pots: [], selectedPotId: null });
+    useRoomStore.setState({ owned: {}, placed: {} });
+  });
+
+  it('연결하면 그 화분이 등록되고 선택된다', async () => {
+    expect(usePotStore.getState().selectedPotId).toBeNull();
+
+    await connectAndTick();
+
+    expect(usePotStore.getState().selectedPotId).toBe('growme01');
+    expect(usePotStore.getState().pots.map((p) => p.potId)).toEqual(['growme01']);
+
+    renderApp();
+    // "아직 등록된 화분이 없어요" 안내가 사라진다
+    expect(screen.queryByText('아직 등록된 화분이 없어요')).toBeNull();
+  });
+
+  it('화분을 연결하지 않아도 상점에서 구매할 수 있다', async () => {
+    renderApp('/shop');
+
+    expect(screen.queryByText('먼저 화분을 선택해 주세요')).toBeNull();
+
+    const card = screen.getByText('나무 선반').closest('div')!;
+    fireEvent.click(within(card).getByRole('button', { name: '구매하기' }));
+    await flush(50);
+
+    // 자리표시 방에 담긴다
+    expect(useRoomStore.getState().placed['my-room']).toEqual(['shelf']);
+  });
+
+  it('연결 전에 꾸민 방이 연결 후 그 화분 방으로 옮겨진다', async () => {
+    act(() => {
+      useRoomStore.setState({ owned: { 'my-room': ['rug'] }, placed: { 'my-room': ['rug'] } });
+    });
+
+    await connectAndTick();
+
+    const room = useRoomStore.getState();
+    expect(room.placed['growme01']).toEqual(['rug']);
+    expect(room.placed['my-room']).toBeUndefined();
+
+    renderApp();
+    expect(
+      Array.from(document.querySelectorAll('img[src^="/room/"]')).map((el) => el.getAttribute('src')),
+    ).toContain('/room/rug.png');
+  });
+});

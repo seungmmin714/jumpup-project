@@ -8,7 +8,7 @@ import { Badge, Card } from '@/components/ui';
 import { PageHeader } from '@/components/AppLayout';
 import { PixelIcon, ShopItemImage, type ShopItemIcon } from '@/components/PixelIcon';
 import { useCharacterStore } from '@/store/characterStore';
-import { usePotStore } from '@/store/potStore';
+import { activePotId, usePotStore } from '@/store/potStore';
 import { useRoomStore } from '@/store/roomStore';
 import { SHOP_ORDER } from '@/data/roomItems';
 
@@ -22,9 +22,9 @@ const UNLOCK_ALL_FOR_DEMO = true;
 
 export default function ShopPage() {
   const level = useCharacterStore((s) => s.level);
-  const potId = usePotStore((s) => s.selectedPotId);
-  const owned = useRoomStore((s) => (potId ? (s.owned[potId] ?? []) : []));
-  const placed = useRoomStore((s) => (potId ? (s.placed[potId] ?? []) : []));
+  const potId = usePotStore(activePotId);
+  const owned = useRoomStore((s) => s.owned[potId] ?? []);
+  const placed = useRoomStore((s) => s.placed[potId] ?? []);
   const purchase = useRoomStore((s) => s.purchase);
   const togglePlaced = useRoomStore((s) => s.togglePlaced);
 
@@ -52,19 +52,12 @@ export default function ShopPage() {
         </div>
       </Card>
 
-      {!potId ? (
-        <Card>
-          <p className="text-sm font-bold text-ink">먼저 화분을 선택해 주세요</p>
-          <p className="mt-1 text-xs text-ink-sub">화분마다 방을 따로 꾸밀 수 있어요.</p>
-        </Card>
-      ) : null}
-
       <ul className="grid grid-cols-2 gap-3">
         {SHOP_ORDER.map((item) => {
           const unlocked = UNLOCK_ALL_FOR_DEMO || level >= item.requiredLevel;
           const isOwned = owned.includes(item.id);
           const isPlaced = placed.includes(item.id);
-          const canAct = potId !== null && (isOwned || unlocked);
+          const canAct = isOwned || unlocked;
 
           return (
             <li key={item.id}>
@@ -91,7 +84,7 @@ export default function ShopPage() {
                   <button
                     type="button"
                     className={`w-full py-2 text-xs ${isPlaced ? 'btn-secondary' : 'btn-primary'}`}
-                    onClick={() => potId && togglePlaced(potId, item.id)}
+                    onClick={() => togglePlaced(potId, item.id)}
                   >
                     {isPlaced ? '방에서 빼기' : '방에 놓기'}
                   </button>
@@ -100,7 +93,7 @@ export default function ShopPage() {
                     type="button"
                     className="btn-primary w-full py-2 text-xs"
                     disabled={!canAct}
-                    onClick={() => potId && purchase(potId, item.id)}
+                    onClick={() => purchase(potId, item.id)}
                   >
                     {unlocked ? '구매하기' : `Lv.${item.requiredLevel} 필요`}
                   </button>

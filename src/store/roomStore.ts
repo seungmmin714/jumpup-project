@@ -25,6 +25,8 @@ interface RoomState {
   place: (potId: string, id: RoomItemId) => void;
   remove: (potId: string, id: RoomItemId) => void;
   togglePlaced: (potId: string, id: RoomItemId) => void;
+  /** 자리표시 방에서 꾸민 걸 실제 화분 방으로 옮긴다 */
+  adoptRoom: (fromPotId: string, toPotId: string) => void;
 }
 
 const add = (list: RoomItemId[] | undefined, id: RoomItemId) =>
@@ -57,6 +59,21 @@ export const useRoomStore = create<RoomState>()(
 
       togglePlaced: (potId, id) =>
         get().isPlaced(potId, id) ? get().remove(potId, id) : get().place(potId, id),
+
+      adoptRoom: (fromPotId, toPotId) =>
+        set((s) => {
+          const fromOwned = s.owned[fromPotId] ?? [];
+          const fromPlaced = s.placed[fromPotId] ?? [];
+          if (fromOwned.length === 0 && fromPlaced.length === 0) return s;
+
+          const merge = (a: RoomItemId[] = [], b: RoomItemId[] = []) => [...new Set([...a, ...b])];
+          const { [fromPotId]: _o, ...restOwned } = s.owned;
+          const { [fromPotId]: _p, ...restPlaced } = s.placed;
+          return {
+            owned: { ...restOwned, [toPotId]: merge(s.owned[toPotId], fromOwned) },
+            placed: { ...restPlaced, [toPotId]: merge(s.placed[toPotId], fromPlaced) },
+          };
+        }),
     }),
     { name: 'growme.room' },
   ),

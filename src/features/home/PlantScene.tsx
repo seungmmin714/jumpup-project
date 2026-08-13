@@ -34,7 +34,7 @@ interface Props {
   caption: string;
   /** 급수가 감지되는 동안엔 기분 색 덮개 대신 물빛으로 */
   watering?: boolean;
-  potId: string | null;
+  potId: string;
 }
 
 export function PlantScene({
@@ -47,7 +47,7 @@ export function PlantScene({
   watering = false,
   potId,
 }: Props) {
-  const placed = useRoomStore((s) => (potId ? (s.placed[potId] ?? []) : []));
+  const placed = useRoomStore((s) => s.placed[potId] ?? []);
   const items = sortedByLayer(placed);
 
   return (

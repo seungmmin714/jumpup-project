@@ -19,7 +19,7 @@ import { BleModeCard } from './BleModeCard';
 import { useOfflineLatest } from '@/lib/useOfflineLatest';
 import { allSensorsMissing, isFieldWarned, useTelemetryStore } from '@/store/telemetryStore';
 import { isLive, useConnectionStore } from '@/store/connectionStore';
-import { selectedPlant, usePotStore } from '@/store/potStore';
+import { activePotId, selectedPlant, usePotStore } from '@/store/potStore';
 import { STAGE_BY_LEVEL, useCharacterStore } from '@/store/characterStore';
 import { moodInfo } from '@/lib/mood';
 import { useWateringDetector, wateringSpeech } from '@/lib/useWateringDetector';
@@ -44,7 +44,7 @@ export default function HomePage() {
   const live = isLive(conn);
   const plant = usePotStore(selectedPlant);
   const pots = usePotStore((s) => s.pots);
-  const potId = usePotStore((s) => s.selectedPotId);
+  const potId = usePotStore(activePotId);
   const character = useCharacterStore();
 
   useOfflineLatest();

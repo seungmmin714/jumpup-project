@@ -27,6 +27,13 @@ interface PotState {
   setLastWateredAt: (iso: string | null) => void;
 }
 
+/**
+ * 화분을 아직 연결하지 않았을 때 쓰는 자리표시 id.
+ * 방 꾸미기처럼 화분 없이도 둘러볼 수 있어야 하는 기능이 이 키를 쓴다.
+ * 실제 화분에 연결되면 그쪽으로 옮겨 붙인다(roomStore.adoptRoom).
+ */
+export const DEFAULT_POT_ID = 'my-room';
+
 export const profileOf = (p: Plant): PlantProfile => ({
   soilDry: p.soilDry,
   soilWet: p.soilWet,
@@ -113,6 +120,9 @@ export const usePotStore = create<PotState>()(
 );
 
 // ───────── 셀렉터 ─────────
+
+/** 선택된 화분이 없으면 자리표시 id를 돌려준다 — 화면이 막히지 않게 */
+export const activePotId = (s: PotState): string => s.selectedPotId ?? DEFAULT_POT_ID;
 
 export const selectedPot = (s: PotState): PotEntry | null =>
   s.pots.find((p) => p.potId === s.selectedPotId) ?? null;
