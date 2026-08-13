@@ -44,6 +44,7 @@ export default function HomePage() {
   const live = isLive(conn);
   const plant = usePotStore(selectedPlant);
   const pots = usePotStore((s) => s.pots);
+  const potId = usePotStore((s) => s.selectedPotId);
   const character = useCharacterStore();
 
   useOfflineLatest();
@@ -122,6 +123,7 @@ export default function HomePage() {
         speech={wateringSpeech(watering.phase, watering.gainedPct) ?? info.speech}
         caption={stale ? '마지막 기분' : `Lv.${character.level}`}
         watering={watering.phase !== 'idle'}
+        potId={potId}
       />
 
       {/* 솔루션 카드 — 문제가 있을 때만, 캐릭터 바로 아래에 붙는다 */}

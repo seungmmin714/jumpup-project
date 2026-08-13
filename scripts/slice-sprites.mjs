@@ -12,7 +12,7 @@
 //
 // 사용법: node scripts/slice-sprites.mjs
 
-import { mkdirSync, readFileSync, writeFileSync, existsSync, statSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { PNG } from 'pngjs';
@@ -86,8 +86,15 @@ const SHEETS = [
   },
 ];
 
-/** 배경 이미지는 자르지 않고 폭만 줄인다 */
-const BACKGROUNDS = [{ file: 'room.png', width: 900 }];
+/**
+ * 방 배경과 가구는 시트가 아니라 낱장으로 들어온다. 자르지 않고 크기만 줄인다.
+ * assets-source/room/*.png → public/room/*.png
+ */
+const ROOM_SRC = 'assets-source/room';
+const ROOM_OUT = 'public/room';
+/** 방 카드가 화면에서 약 358px이므로 배경 900px, 가구 240px이면 3배 화면까지 충분하다 */
+const ROOM_BASE_WIDTH = 900;
+const ROOM_ITEM_WIDTH = 240;
 
 // 배경을 지우고 남는 옅은 잔여물(알파 한 자리~수십)이 셀 가장자리까지 이어져 있으면
 // 트림이 통째로 실패한다. 경계 판정은 넉넉히 불투명한 픽셀만 내용으로 친다.
@@ -348,16 +355,15 @@ for (const sheet of SHEETS) {
   }
 }
 
-for (const bgDef of BACKGROUNDS) {
-  const src = path.join(SRC_DIR, bgDef.file);
-  if (!existsSync(src)) {
-    console.warn(`⚠️  건너뜀 (없음): ${src}`);
-    continue;
+if (existsSync(ROOM_SRC)) {
+  mkdirSync(ROOM_OUT, { recursive: true });
+  for (const file of readdirSync(ROOM_SRC).filter((f) => f.toLowerCase().endsWith('.png'))) {
+    const outPath = path.join(ROOM_OUT, file);
+    writeFileSync(outPath, readFileSync(path.join(ROOM_SRC, file)));
+    const max = file === 'base.png' ? ROOM_BASE_WIDTH : ROOM_ITEM_WIDTH;
+    shrink(outPath, max);
+    console.log(`🏠 ${file.padEnd(22)} → ${max}px, ${Math.round(statSync(outPath).size / 1024)}KB`);
   }
-  const outPath = path.join(OUT_DIR, bgDef.file);
-  writeFileSync(outPath, readFileSync(src));
-  shrink(outPath, bgDef.width);
-  console.log(`✅ ${bgDef.file.padEnd(22)} → ${bgDef.width}px, ${Math.round(statSync(outPath).size / 1024)}KB`);
 }
 
 console.log('\n완료. public/sprites 를 확인하세요.');

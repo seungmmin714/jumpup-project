@@ -1,30 +1,24 @@
-// 상점 — 후순위(§15). 포인트 시스템이 아직 없으므로 화면 구조만 시안대로 세워 두고,
-// 실제 값은 지금 있는 것(캐릭터 레벨)만 쓴다. 없는 재화를 지어내지 않는다.
+// 상점 — 방 꾸미기 아이템을 구매하고, 방에 넣고 빼는 곳.
+//
+// 구매하면 별도의 배치 과정 없이 즉시 방에 나타난다.
+// 위치는 아이템마다 정해져 있어 사용자가 옮기지 않는다(src/data/roomItems.ts).
+// 구매·배치 상태는 화분별로 저장되어 새로고침 후에도 남는다.
 
 import { Badge, Card } from '@/components/ui';
 import { PageHeader } from '@/components/AppLayout';
 import { PixelIcon, ShopItemImage, type ShopItemIcon } from '@/components/PixelIcon';
 import { useCharacterStore } from '@/store/characterStore';
-
-interface ShopItem {
-  id: ShopItemIcon;
-  name: string;
-  /** 해금에 필요한 레벨 */
-  requiredLevel: number;
-}
-
-/** 방 꾸미기 아이템 미리보기. 아직 구매 기능은 없다. */
-const ITEMS: ShopItem[] = [
-  { id: 'shelf', name: '나무 선반', requiredLevel: 5 },
-  { id: 'watering-can', name: '물뿌리개', requiredLevel: 5 },
-  { id: 'rug', name: '동그란 러그', requiredLevel: 10 },
-  { id: 'window', name: '창문', requiredLevel: 15 },
-  { id: 'hanging-plant', name: '행잉 플랜트', requiredLevel: 20 },
-  { id: 'frame', name: '액자', requiredLevel: 25 },
-];
+import { usePotStore } from '@/store/potStore';
+import { useRoomStore } from '@/store/roomStore';
+import { ROOM_ITEMS } from '@/data/roomItems';
 
 export default function ShopPage() {
   const level = useCharacterStore((s) => s.level);
+  const potId = usePotStore((s) => s.selectedPotId);
+  const owned = useRoomStore((s) => (potId ? (s.owned[potId] ?? []) : []));
+  const placed = useRoomStore((s) => (potId ? (s.placed[potId] ?? []) : []));
+  const purchase = useRoomStore((s) => s.purchase);
+  const togglePlaced = useRoomStore((s) => s.togglePlaced);
 
   return (
     <div className="space-y-3">
@@ -42,41 +36,73 @@ export default function ShopPage() {
         <div className="flex items-center gap-4">
           <ShopItemImage name="gift-box" size={56} />
           <div className="min-w-0">
-            <p className="text-lg font-black text-ink">준비 중이에요</p>
+            <p className="text-lg font-black text-ink">방을 꾸며보세요</p>
             <p className="mt-1 text-xs leading-relaxed text-ink-sub">
-              화분을 돌보며 모은 포인트로 아이템을 살 수 있게 될 거예요.
+              구매한 가구는 바로 방에 놓여요. 자리는 정해져 있어서 옮기지 않아도 돼요.
             </p>
           </div>
         </div>
       </Card>
 
-      <p className="px-1 pt-1 text-[11px] font-bold text-ink-sub">준비 중인 아이템</p>
+      {!potId ? (
+        <Card>
+          <p className="text-sm font-bold text-ink">먼저 화분을 선택해 주세요</p>
+          <p className="mt-1 text-xs text-ink-sub">화분마다 방을 따로 꾸밀 수 있어요.</p>
+        </Card>
+      ) : null}
 
       <ul className="grid grid-cols-2 gap-3">
-        {ITEMS.map((item) => {
+        {ROOM_ITEMS.map((item) => {
           const unlocked = level >= item.requiredLevel;
+          const isOwned = owned.includes(item.id);
+          const isPlaced = placed.includes(item.id);
+          const canAct = potId !== null && (isOwned || unlocked);
+
           return (
             <li key={item.id}>
-              <div
-                className={`card relative flex flex-col items-center gap-2 py-5 ${
-                  unlocked ? '' : 'opacity-70'
-                }`}
-              >
-                {!unlocked ? (
-                  <span className="absolute right-3 top-3">
-                    <PixelIcon name="lock" size={18} alt="잠김" />
-                  </span>
-                ) : null}
-                <ShopItemImage name={item.id} size={72} className={unlocked ? '' : 'grayscale'} />
+              <div className={`card flex flex-col items-center gap-2 py-4 ${isOwned ? '' : 'opacity-80'}`}>
+                <div className="relative">
+                  <ShopItemImage
+                    name={item.id as ShopItemIcon}
+                    size={64}
+                    className={unlocked || isOwned ? '' : 'grayscale'}
+                  />
+                  {!unlocked && !isOwned ? (
+                    <span className="absolute -right-1 -top-1">
+                      <PixelIcon name="lock" size={18} alt="잠김" />
+                    </span>
+                  ) : null}
+                </div>
+
                 <p className="text-sm font-bold text-ink">{item.name}</p>
-                <p className="text-[11px] font-bold text-ink-sub">
-                  {unlocked ? '준비 중' : `Lv.${item.requiredLevel} 필요`}
-                </p>
+
+                {isOwned ? (
+                  <button
+                    type="button"
+                    className={`w-full py-2 text-xs ${isPlaced ? 'btn-secondary' : 'btn-primary'}`}
+                    onClick={() => potId && togglePlaced(potId, item.id)}
+                  >
+                    {isPlaced ? '방에서 빼기' : '방에 놓기'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-primary w-full py-2 text-xs"
+                    disabled={!canAct}
+                    onClick={() => potId && purchase(potId, item.id)}
+                  >
+                    {unlocked ? '구매하기' : `Lv.${item.requiredLevel} 필요`}
+                  </button>
+                )}
               </div>
             </li>
           );
         })}
       </ul>
+
+      <p className="px-1 pb-1 text-center text-[11px] text-ink-sub">
+        보유 {owned.length} · 방에 놓음 {placed.length}
+      </p>
     </div>
   );
 }

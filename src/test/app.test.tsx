@@ -11,6 +11,7 @@ import { useTelemetryStore } from '@/store/telemetryStore';
 import { useConnectionStore } from '@/store/connectionStore';
 import { usePotStore } from '@/store/potStore';
 import { useCharacterStore } from '@/store/characterStore';
+import { useRoomStore } from '@/store/roomStore';
 
 function renderApp(route = '/') {
   return render(
@@ -313,7 +314,7 @@ describe('탭 이동', () => {
 
     fireEvent.click(within(nav).getByText('상점'));
     await flush(50);
-    expect(screen.getByText('준비 중이에요')).toBeTruthy();
+    expect(screen.getByText('방을 꾸며보세요')).toBeTruthy();
   });
 });
 
@@ -423,5 +424,99 @@ describe('토양 게이지 — 식물별 목표 구간 (T-09)', () => {
 
     expect(segmentWidths()).toEqual(['50%', '20%', '30%']);
     expect(screen.getByRole('img', { name: /목표 50~70%/ })).toBeTruthy();
+  });
+});
+
+describe('방 꾸미기 (상점 → 홈)', () => {
+  beforeEach(() => {
+    useRoomStore.setState({ owned: {}, placed: {} });
+    useCharacterStore.setState({ level: 30 }); // 전 아이템 해금
+  });
+
+  const roomItems = () =>
+    Array.from(document.querySelectorAll('img[src^="/room/"]')).map((el) =>
+      (el as HTMLImageElement).getAttribute('src'),
+    );
+
+  it('구매 전에는 방에 가구가 없다 (배경만)', async () => {
+    await connectAndTick();
+    renderApp();
+    expect(roomItems()).toEqual(['/room/base.png']);
+  });
+
+  it('구매하면 배치 과정 없이 즉시 방에 나타난다', async () => {
+    await connectAndTick();
+    const view = renderApp('/shop');
+
+    const card = screen.getByText('동그란 러그').closest('div')!;
+    fireEvent.click(within(card).getByRole('button', { name: '구매하기' }));
+    await flush(100);
+    expect(useRoomStore.getState().placed['growme01']).toContain('rug');
+
+    view.unmount();
+    renderApp();
+    expect(roomItems()).toContain('/room/rug.png');
+  });
+
+  it('겹침 순서대로 그린다 — 벽 → 선반 → 러그 → 물뿌리개', async () => {
+    act(() => {
+      useRoomStore.setState({
+        owned: { growme01: ['watering-can', 'rug', 'shelf', 'window'] },
+        placed: { growme01: ['watering-can', 'rug', 'shelf', 'window'] },
+      });
+    });
+    await connectAndTick();
+    renderApp();
+
+    // 구매 순서와 무관하게 레이어 순서로 정렬돼야 한다
+    expect(roomItems()).toEqual([
+      '/room/base.png',
+      '/room/window.png',
+      '/room/shelf.png',
+      '/room/rug.png',
+      '/room/watering-can.png',
+    ]);
+  });
+
+  it('방에서 뺐다가 다시 넣을 수 있다', async () => {
+    act(() => {
+      useRoomStore.setState({ owned: { growme01: ['shelf'] }, placed: { growme01: ['shelf'] } });
+    });
+    await connectAndTick();
+    const view = renderApp('/shop');
+
+    const card = screen.getByText('나무 선반').closest('div')!;
+    fireEvent.click(within(card).getByRole('button', { name: '방에서 빼기' }));
+    await flush(50);
+    expect(useRoomStore.getState().placed['growme01']).toEqual([]);
+    // 보유는 유지된다
+    expect(useRoomStore.getState().owned['growme01']).toEqual(['shelf']);
+
+    fireEvent.click(within(card).getByRole('button', { name: '방에 놓기' }));
+    await flush(50);
+
+    view.unmount();
+    renderApp();
+    expect(roomItems()).toContain('/room/shelf.png');
+  });
+
+  it('레벨이 모자라면 구매할 수 없다', async () => {
+    act(() => useCharacterStore.setState({ level: 1 }));
+    await connectAndTick();
+    renderApp('/shop');
+
+    const card = screen.getByText('액자').closest('div')!;
+    const btn = within(card).getByRole('button', { name: 'Lv.25 필요' });
+    expect(btn).toHaveProperty('disabled', true);
+  });
+
+  it('화분마다 방이 따로 저장된다', async () => {
+    act(() => {
+      useRoomStore.setState({ owned: { growme02: ['rug'] }, placed: { growme02: ['rug'] } });
+    });
+    await connectAndTick();
+    renderApp();
+    // 선택된 화분은 growme01 — growme02의 러그는 보이지 않는다
+    expect(roomItems()).toEqual(['/room/base.png']);
   });
 });
