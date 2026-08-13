@@ -62,6 +62,43 @@ export const SOIL_BAND_SHORT: Record<SoilBand, string> = {
   wet: '과습 주의',
 };
 
+export type TempBand = 'cold' | 'good' | 'hot';
+
+/** 온도 상태. 판정 기준은 화분과 동일하게 식물 프로파일(x10)을 쓴다. */
+export function tempBand(
+  temperature: number | null,
+  tempMinX10: number,
+  tempMaxX10: number,
+): TempBand | null {
+  if (temperature === null) return null;
+  const x10 = temperature * 10;
+  if (x10 > tempMaxX10) return 'hot';
+  if (x10 < tempMinX10) return 'cold';
+  return 'good';
+}
+
+export const TEMP_BAND_LABEL: Record<TempBand, string> = {
+  cold: '추워요',
+  good: '따뜻해요',
+  hot: '더워요',
+};
+
+export type HumidityBand = 'dry' | 'good' | 'humid';
+
+/** 공기 습도. 식물별 기준이 없으므로 실내 쾌적 구간(40~70%)을 쓴다. */
+export function humidityBand(humidity: number | null): HumidityBand | null {
+  if (humidity === null) return null;
+  if (humidity < 40) return 'dry';
+  if (humidity > 70) return 'humid';
+  return 'good';
+}
+
+export const HUMIDITY_BAND_LABEL: Record<HumidityBand, string> = {
+  dry: '건조해요',
+  good: '보통',
+  humid: '습해요',
+};
+
 /**
  * 게이지 위치(0~100, 왼쪽=건조·오른쪽=과습)로 정규화한다.
  * 원시값은 클수록 건조하므로 축이 뒤집힌다 → 습도(%)를 그대로 쓰면 된다.

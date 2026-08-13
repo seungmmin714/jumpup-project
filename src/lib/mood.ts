@@ -23,6 +23,8 @@ export interface MoodInfo {
   speech: string;
   /** 솔루션 카드 제목 — mood 0이면 null (카드 미표시) */
   title: string | null;
+  /** 홈 하단 상태 카드에 쓰는 한 줄 요약. 솔루션 제목과 문구가 겹치지 않게 따로 둔다. */
+  summary: string;
   actions: SolutionAction[];
   /** 캐릭터 주변 색 톤 */
   tone: 'good' | 'dry' | 'hot' | 'cold' | 'dark' | 'wet' | 'error';
@@ -32,6 +34,7 @@ export const MOOD_TABLE: Record<Mood, MoodInfo> = {
   0: {
     mood: 0,
     key: 'OK',
+    summary: '우리 식물이 아주 건강하게 잘 자라고 있어요.',
     name: '기분 좋음',
     face: '(◕‿◕)',
     speech: '상태가 완벽해요! 기분이 좋네요',
@@ -42,6 +45,7 @@ export const MOOD_TABLE: Record<Mood, MoodInfo> = {
   1: {
     mood: 1,
     key: 'THIRSTY',
+    summary: '흙이 말랐어요. 물을 주면 금방 기운을 차려요.',
     name: '목마름',
     face: '(´•ω•`)',
     speech: '목이 말라요…',
@@ -52,6 +56,7 @@ export const MOOD_TABLE: Record<Mood, MoodInfo> = {
   2: {
     mood: 2,
     key: 'HOT',
+    summary: '온도가 너무 높아요. 시원하게 해주세요.',
     name: '더워함',
     face: '(>﹏<)',
     speech: '너무 더워요!',
@@ -66,6 +71,7 @@ export const MOOD_TABLE: Record<Mood, MoodInfo> = {
   3: {
     mood: 3,
     key: 'COLD',
+    summary: '온도가 너무 낮아요. 따뜻한 자리가 필요해요.',
     name: '추워함',
     face: '(っ˘̩╭╮˘̩)っ',
     speech: '추워요…',
@@ -79,6 +85,7 @@ export const MOOD_TABLE: Record<Mood, MoodInfo> = {
   4: {
     mood: 4,
     key: 'DARK',
+    summary: '빛이 부족해요. 밝은 곳으로 옮겨주세요.',
     name: '졸림',
     face: '(￣o￣) zzZ',
     speech: '너무 어두워요',
@@ -92,6 +99,7 @@ export const MOOD_TABLE: Record<Mood, MoodInfo> = {
   5: {
     mood: 5,
     key: 'OVERWATER',
+    summary: '흙이 너무 젖어 있어요. 마를 때까지 기다려요.',
     name: '배부름·힘듦',
     face: '(x_x)',
     speech: '물을 너무 많이 마셨어요…',
@@ -105,6 +113,7 @@ export const MOOD_TABLE: Record<Mood, MoodInfo> = {
   6: {
     mood: 6,
     key: 'SENSOR_ERR',
+    summary: '센서값을 읽지 못하고 있어요. 연결을 확인해주세요.',
     name: '상태 확인 불가',
     face: '(・_・?)',
     speech: '몸이 이상해요…',

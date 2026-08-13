@@ -316,3 +316,63 @@ describe('탭 이동', () => {
     expect(screen.getByText('준비 중이에요')).toBeTruthy();
   });
 });
+
+describe('캐릭터·디자인', () => {
+  it('선택한 식물의 캐릭터 아트를 그린다', async () => {
+    await connectAndTick();
+    renderApp();
+
+    const img = screen.getByAltText(/방울토마토 캐릭터/) as HTMLImageElement;
+    expect(img.getAttribute('src')).toBe('/characters/tomato-cherry.png');
+  });
+
+  it('아트 파일이 없으면 텍스트 표정으로 대체된다', async () => {
+    await connectAndTick();
+    renderApp();
+
+    const img = screen.getByAltText(/방울토마토 캐릭터/);
+    act(() => {
+      fireEvent.error(img);
+    });
+
+    expect(screen.queryByAltText(/방울토마토 캐릭터/)).toBeNull();
+    expect(screen.getByLabelText(/방울토마토 캐릭터/)).toBeTruthy();
+  });
+
+  it('식물을 바꾸면 캐릭터도 바뀐다', async () => {
+    const mock = await connectAndTick();
+    renderApp('/catalog');
+
+    fireEvent.click(screen.getByText('다육식물').closest('button')!);
+    await flush(1000);
+
+    expect(mock.snapshot().profile.soilDry).toBe(903);
+    expect(
+      (screen.getAllByAltText(/다육식물 캐릭터/)[0] as HTMLImageElement).getAttribute('src'),
+    ).toBe('/characters/succulent.png');
+  });
+
+  it('센서 상태를 숫자가 아니라 문구로 먼저 보여준다', async () => {
+    const mock = await connectAndTick();
+    renderApp();
+
+    act(() => {
+      mock.setTempX10(340); // 방울토마토 상한 30℃ 초과
+      mock.setSoilRaw(760); // soilDry 708 이상 → 건조
+    });
+    await flush(6000);
+
+    expect(screen.getByText('더워요')).toBeTruthy();
+    // 게이지 축 라벨에도 '건조'가 있으므로 개수로 확인한다
+    expect(screen.getAllByText('건조').length).toBeGreaterThan(0);
+    expect(screen.getByText('물이 필요해요')).toBeTruthy();
+  });
+
+  it('하단 탭은 홈·일지·도감·상점 네 개다', () => {
+    renderApp();
+    const nav = screen.getByRole('navigation', { name: '주요 메뉴' });
+    for (const label of ['홈', '일지', '도감', '상점']) {
+      expect(within(nav).getByText(label)).toBeTruthy();
+    }
+  });
+});

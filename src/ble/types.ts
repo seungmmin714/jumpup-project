@@ -79,6 +79,10 @@ export interface Plant extends PlantProfile {
   plantId: string;
   nameKo: string;
   emoji: string;
+  /** public/characters/ 아래 캐릭터 아트 경로. 파일이 없으면 텍스트 표정으로 대체된다. */
+  characterImage: string;
+  /** 기분별 전용 아트가 생기면 여기에 넣는다. 있으면 characterImage보다 우선한다. */
+  characterMoodImages?: Partial<Record<Mood, string>>;
   targetMinPct: number; // 목표 습도 하한 (표시용)
   targetMaxPct: number; // 목표 습도 상한 (표시용)
   waterMl: number; // 1회 권장 급수량

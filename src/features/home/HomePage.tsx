@@ -1,23 +1,36 @@
-// T-07 — 홈 대시보드. §9.2 구성 순서를 그대로 따른다.
+// T-07 — 홈 대시보드.
+// 레이아웃 골격은 참고 디자인(스탯 카드 → 씬 → 상태 카드)을 따르되,
+// 담기는 내용은 §9.2가 요구하는 우리 기능이다.
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ConnectionBadge, ConnectionBanners } from '@/components/ConnectionBadge';
 import { Banner, Card, ProgressBar } from '@/components/ui';
+import { DonutStat, LevelCard, PillButton, StatCard } from '@/components/StatCard';
 import { SoilGauge } from '@/components/SoilGauge';
-import { Character, CelebrationOverlay } from '@/features/character/Character';
-import { SensorStrip } from './SensorStrip';
+import { CelebrationOverlay } from '@/features/character/Character';
+import { PlantCharacter, SpeechBubble, moodScene } from '@/features/character/PlantCharacter';
 import { SolutionCard } from './SolutionCard';
 import { LedSlider } from './LedSlider';
 import { PotPicker } from './PotPicker';
 import { BleModeCard } from './BleModeCard';
 import { useOfflineLatest } from '@/lib/useOfflineLatest';
-import { allSensorsMissing, useTelemetryStore } from '@/store/telemetryStore';
+import { allSensorsMissing, isFieldWarned, useTelemetryStore } from '@/store/telemetryStore';
 import { isLive, isProtoOk, useConnectionStore } from '@/store/connectionStore';
 import { selectedPlant, usePotStore } from '@/store/potStore';
-import { useCharacterStore } from '@/store/characterStore';
+import { STAGE_BY_LEVEL, useCharacterStore } from '@/store/characterStore';
+import { moodInfo } from '@/lib/mood';
 import { timeAgo } from '@/lib/format';
-import { STAGE_BY_LEVEL } from '@/store/characterStore';
+import {
+  HUMIDITY_BAND_LABEL,
+  LIGHT_BAND_LABEL,
+  SOIL_BAND_SHORT,
+  TEMP_BAND_LABEL,
+  humidityBand,
+  lightBand,
+  soilBand,
+  tempBand,
+} from '@/lib/convert';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -37,32 +50,35 @@ export default function HomePage() {
   useOfflineLatest();
 
   const mood = latest?.mood ?? 0;
+  const info = moodInfo(mood);
   const stale = !live;
 
+  const temp = tempBand(latest?.temperature ?? null, plant.tempMinX10, plant.tempMaxX10);
+  const humi = humidityBand(latest?.humidity ?? null);
+  const soil = soilBand(latest?.soilRaw ?? null, plant.soilDry, plant.soilWet);
+  const light = lightBand(latest?.lightLevel ?? null);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <CelebrationOverlay />
 
-      {/* ① 연결 배지 */}
-      <div className="space-y-2">
-        <ConnectionBadge />
-        <PotPicker />
-        <ConnectionBanners />
+      {/* 연결 상태 — 참고 디자인에는 없지만 BLE 앱에는 반드시 있어야 한다 */}
+      <ConnectionBadge />
+      <PotPicker />
+      <ConnectionBanners />
 
-        {stale && latest && source === 'server' ? (
-          <Banner tone="info" title={`${timeAgo(latest.measuredAt)} 확인된 상태예요`}>
-            실시간이 아니에요. 화분 근처에서 연결하면 지금 상태를 볼 수 있어요.
-          </Banner>
-        ) : null}
+      {stale && latest && source === 'server' ? (
+        <Banner tone="info" title={`${timeAgo(latest.measuredAt)} 확인된 상태예요`}>
+          실시간이 아니에요. 화분 근처에서 연결하면 지금 상태를 볼 수 있어요.
+        </Banner>
+      ) : null}
 
-        {allSensorsMissing(latest) ? (
-          <Banner tone="error" title="센서 연결 확인">
-            모든 센서값이 들어오지 않아요. 화분 전원과 센서 케이블을 확인해 주세요.
-          </Banner>
-        ) : null}
-      </div>
+      {allSensorsMissing(latest) ? (
+        <Banner tone="error" title="센서 연결 확인">
+          모든 센서값이 들어오지 않아요. 화분 전원과 센서 케이블을 확인해 주세요.
+        </Banner>
+      ) : null}
 
-      {/* 미연결일 때만 — 시뮬/실기기 전환과 연결 진단 */}
       {!live ? <BleModeCard /> : null}
 
       {pots.length === 0 ? (
@@ -74,72 +90,161 @@ export default function HomePage() {
         </Card>
       ) : null}
 
-      {/* ② 센서 요약 */}
-      <SensorStrip t={latest} streak={streak} />
-
-      {/* ③ 인벤토리 / 이벤트 — 후순위, 자리만 확보 */}
-      <div className="grid grid-cols-2 gap-2">
-        <button type="button" className="btn-secondary opacity-60" disabled>
-          🎒 인벤토리
-        </button>
-        <button type="button" className="btn-secondary opacity-60" disabled>
-          🎪 이벤트
-        </button>
+      {/* ① 스탯 — 온도 · 습도 · 레벨 */}
+      <div className="grid grid-cols-3 gap-2">
+        <StatCard
+          icon={temp === 'hot' ? '🔥' : temp === 'cold' ? '🥶' : '☀️'}
+          value={latest?.temperature === null || !latest ? '--' : `${latest.temperature.toFixed(1)}℃`}
+          caption={temp ? TEMP_BAND_LABEL[temp] : '온도'}
+          warned={isFieldWarned(streak, 'temp')}
+        />
+        <DonutStat
+          value={latest?.humidity ?? null}
+          caption={humi ? HUMIDITY_BAND_LABEL[humi] : '공기 습도'}
+          warned={isFieldWarned(streak, 'humi')}
+        />
+        <LevelCard level={character.level} exp={character.exp} expToNext={character.expToNext} />
       </div>
 
-      {/* ④ 캐릭터 + 말풍선 */}
-      <Card className="py-6">
-        <Character mood={mood} stale={stale} />
-      </Card>
+      {/* ② 스탯 — 토양 · 조도 (우리 앱에만 있는 핵심 지표) */}
+      <div className="grid grid-cols-2 gap-2">
+        <StatCard
+          icon="🪴"
+          value={
+            latest?.soilMoisture === null || !latest ? '--' : `토양 ${latest.soilMoisture}%`
+          }
+          caption={soil ? SOIL_BAND_SHORT[soil] : '토양 수분'}
+          warned={isFieldWarned(streak, 'soil')}
+          tone={
+            soil === 'dry'
+              ? 'text-state-dry'
+              : soil === 'wet'
+                ? 'text-state-wet'
+                : 'text-olive-900'
+          }
+        />
+        <StatCard
+          icon="💡"
+          value={light ? LIGHT_BAND_LABEL[light] : '--'}
+          caption={latest?.lightLevel === null || !latest ? '조도' : `조도 지수 ${latest.lightLevel}`}
+          warned={isFieldWarned(streak, 'light')}
+        />
+      </div>
 
-      {/* ⑤ 솔루션 카드 */}
+      {/* ③ 인벤토리 · 이벤트 — 후순위, 자리만 확보 */}
+      <div className="grid grid-cols-2 gap-2">
+        <PillButton icon="🎒" label="인벤토리" disabled />
+        <PillButton icon="🎁" label="이벤트" badge disabled />
+      </div>
+
+      {/* ④ 씬 — 캐릭터와 말풍선 */}
+      <section
+        className={`relative overflow-hidden rounded-3xl bg-gradient-to-b ring-1 ring-olive-100 ${moodScene(mood)}`}
+      >
+        <RoomBackdrop />
+
+        <div className="relative flex flex-col items-center gap-3 px-4 pb-6 pt-5">
+          <SpeechBubble text={info.speech} tone={mood === 0 ? 'default' : 'alert'} />
+          <PlantCharacter
+            plant={plant}
+            mood={mood}
+            stale={stale}
+            celebrating={character.celebrating}
+          />
+          <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-[11px] font-bold text-olive-700 ring-1 ring-olive-100">
+            <span aria-hidden>{plant.emoji}</span>
+            {plant.nameKo}
+            <span className="text-olive-300">·</span>
+            <span className={stale ? 'text-olive-400' : ''}>
+              {stale ? '마지막 기분' : info.name}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ⑤ 솔루션 카드 — mood !== 0 일 때만 */}
       <SolutionCard mood={mood} onRaiseLed={() => setLedBoost((n) => n + 1)} />
 
-      {/* ⑥ 토양 게이지 + 제어 */}
+      {/* ⑥ 토양 목표 대역 + 물 주기 */}
       <Card>
         <SoilGauge soilRaw={latest?.soilRaw ?? null} profile={plant} />
+        <button
+          type="button"
+          className={`btn mt-3 w-full ${
+            mood === 1
+              ? 'bg-state-wet text-white shadow-md animate-pop-in'
+              : 'bg-olive-600 text-cream-50'
+          }`}
+          onClick={() => navigate('/water')}
+          disabled={!protoOk}
+        >
+          💧 물 주기
+          {mood === 1 ? <span className="text-xs font-normal">지금 필요해요!</span> : null}
+        </button>
       </Card>
-
-      <button
-        type="button"
-        className={`btn w-full ${
-          mood === 1 ? 'bg-state-wet text-white shadow-lg animate-pop-in' : 'btn-secondary'
-        }`}
-        onClick={() => navigate('/water')}
-        disabled={!protoOk}
-      >
-        💧 물 주기
-        {mood === 1 ? <span className="text-xs font-normal">지금 필요해요!</span> : null}
-      </button>
 
       <LedSlider boostSignal={ledBoost} />
 
-      {/* ⑦ 행복도·성장 단계 */}
+      {/* ⑦ 상태 요약 — 참고 디자인의 하단 카드 */}
       <Card>
-        <div className="flex items-baseline justify-between">
-          <span className="state-word text-olive-800">
-            {mood === 0 ? '건강해요!' : '돌봄이 필요해요'}
-          </span>
-          <span className="text-sm font-bold text-olive-600">
-            😊 행복도 {character.happiness}%
-          </span>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className={`state-word ${mood === 0 ? 'text-olive-600' : 'text-orange-700'}`}>
+              {mood === 0 ? '건강해요!' : '돌봄이 필요해요'}
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-olive-500">
+              {mood === 0 ? `${plant.nameKo}가 ${info.summary.replace('우리 식물이 ', '')}` : info.summary}
+            </p>
+          </div>
+          <div className="shrink-0 text-center">
+            <span className="text-2xl" aria-hidden>
+              {character.happiness >= 70 ? '😊' : character.happiness >= 40 ? '🙂' : '😥'}
+            </span>
+            <p className="text-[11px] font-bold text-olive-500">행복도</p>
+          </div>
         </div>
-        <ProgressBar value={character.happiness} className="mt-2" />
 
-        <div className="mt-4 flex items-baseline justify-between text-xs text-olive-600">
-          <span>
-            성장 단계 · <b>{character.stage || STAGE_BY_LEVEL(character.level)}</b>
+        <ProgressBar value={character.happiness} className="mt-3" />
+        <p className="mt-1 text-right text-[11px] font-semibold text-olive-400">
+          {character.happiness}%
+        </p>
+
+        <hr className="my-3 border-olive-100" />
+
+        <div className="flex items-baseline justify-between text-xs">
+          <span className="text-olive-500">
+            성장 단계 · <b className="text-olive-800">{character.stage || STAGE_BY_LEVEL(character.level)}</b>
           </span>
-          <span>
-            Lv.{character.level} · {character.exp}/{character.expToNext} EXP
-          </span>
+          <span className="font-bold text-olive-600">{character.stageProgress}%</span>
         </div>
-        <ProgressBar
-          value={(character.exp / Math.max(1, character.expToNext)) * 100}
-          tone="bg-cream-500"
-          className="mt-1.5"
-        />
+        <ProgressBar value={character.stageProgress} tone="bg-cream-500" className="mt-1.5" />
       </Card>
     </div>
+  );
+}
+
+/** 씬 배경 — 창문·선반·러그를 아주 옅게 깔아 방 안 느낌만 준다 */
+function RoomBackdrop() {
+  return (
+    <svg
+      viewBox="0 0 360 220"
+      className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.5]"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden
+    >
+      {/* 창문 */}
+      <rect x="30" y="24" width="86" height="72" rx="8" fill="#ffffff" opacity="0.75" />
+      <rect x="30" y="24" width="86" height="72" rx="8" fill="none" stroke="#c7d0a8" strokeWidth="2.5" />
+      <line x1="73" y1="24" x2="73" y2="96" stroke="#c7d0a8" strokeWidth="2" />
+      <line x1="30" y1="60" x2="116" y2="60" stroke="#c7d0a8" strokeWidth="2" />
+      {/* 선반 */}
+      <rect x="232" y="52" width="98" height="5" rx="2.5" fill="#d9c9a4" />
+      <circle cx="252" cy="44" r="7" fill="#a0ad5e" opacity="0.7" />
+      <circle cx="276" cy="45" r="6" fill="#849244" opacity="0.6" />
+      <rect x="296" y="36" width="14" height="16" rx="3" fill="#b9c382" opacity="0.7" />
+      {/* 러그 */}
+      <ellipse cx="180" cy="200" rx="118" ry="22" fill="#e9d9ae" opacity="0.7" />
+      <ellipse cx="180" cy="200" rx="92" ry="15" fill="none" stroke="#d0ab63" strokeWidth="2" opacity="0.5" />
+    </svg>
   );
 }

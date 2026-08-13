@@ -9,6 +9,7 @@ import { sendCommand } from '@/store/bleBridge';
 import { canControl, useConnectionStore } from '@/store/connectionStore';
 import { profileOf, sameProfile, selectedPlant, usePotStore } from '@/store/potStore';
 import { Badge, Banner, Card, SectionTitle } from '@/components/ui';
+import { PlantCharacter } from '@/features/character/PlantCharacter';
 import type { Plant } from '@/ble/types';
 
 export default function CatalogPage() {
@@ -107,9 +108,9 @@ export default function CatalogPage() {
                 onClick={() => void apply(p)}
               >
                 <div className="flex items-start gap-3">
-                  <span className="text-3xl" aria-hidden>
-                    {p.emoji}
-                  </span>
+                  <div className="shrink-0 rounded-2xl bg-olive-50 p-1 ring-1 ring-olive-100">
+                    <PlantCharacter plant={p} mood={0} size="md" />
+                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-olive-900">{p.nameKo}</span>

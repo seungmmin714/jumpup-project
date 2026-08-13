@@ -6,6 +6,7 @@ import type { Plant } from '@/ble/types';
 export const PLANTS: readonly Plant[] = [
   {
     plantId: 'tomato-cherry',
+    characterImage: '/characters/tomato-cherry.png',
     nameKo: '방울토마토',
     emoji: '🍅',
     targetMinPct: 45,
@@ -20,6 +21,7 @@ export const PLANTS: readonly Plant[] = [
   },
   {
     plantId: 'basil',
+    characterImage: '/characters/basil.png',
     nameKo: '바질',
     emoji: '🌿',
     targetMinPct: 45,
@@ -34,6 +36,7 @@ export const PLANTS: readonly Plant[] = [
   },
   {
     plantId: 'lettuce',
+    characterImage: '/characters/lettuce.png',
     nameKo: '상추',
     emoji: '🥬',
     targetMinPct: 50,
@@ -48,6 +51,7 @@ export const PLANTS: readonly Plant[] = [
   },
   {
     plantId: 'monstera',
+    characterImage: '/characters/monstera.png',
     nameKo: '몬스테라',
     emoji: '🪴',
     targetMinPct: 35,
@@ -62,6 +66,7 @@ export const PLANTS: readonly Plant[] = [
   },
   {
     plantId: 'succulent',
+    characterImage: '/characters/succulent.png',
     nameKo: '다육식물',
     emoji: '🌵',
     targetMinPct: 15,
