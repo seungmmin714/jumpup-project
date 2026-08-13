@@ -1,8 +1,12 @@
 // T-09 / §9.3 — 단순 퍼센트가 아니라 "목표 대역 대비 위치"를 보여준다.
-// 시안대로 건조 / 목표 구간 / 과습 3구간을 한 줄 바에 나눠 칠하고,
-// 현재 위치는 그 위에 마커로 얹는다.
+//
+// 트랙은 스프라이트의 **빈 프레임만** 9-슬라이스로 쓴다.
+// 건조 / 목표 구간 / 과습의 너비는 선택한 식물의 soilDry·soilWet에서 매번
+// 계산하므로, 식물을 바꾸면 경계가 즉시 따라 움직인다.
+// 경계 숫자와 현재 위치 마커도 전부 HTML 요소다 — 그림에 박힌 눈금은 쓰지 않는다.
 
 import { SOIL_BAND_LABEL, SOIL_BAND_SHORT, soilBand, toSoilMoisture } from '@/lib/convert';
+import { PixelIcon } from './PixelIcon';
 import type { PlantProfile } from '@/ble/types';
 
 export const BAND_TEXT = {
@@ -26,25 +30,27 @@ export function SoilGauge({ soilRaw, profile, size = 'sm', showLabels = true }: 
   const bandEnd = toSoilMoisture(profile.soilWet) ?? 65; // 목표 상한
   const band = soilBand(soilRaw, profile.soilDry, profile.soilWet);
 
-  const trackH = size === 'lg' ? 'h-8' : 'h-6';
+  const dryW = Math.max(0, Math.min(100, bandStart));
+  const targetW = Math.max(0, Math.min(100 - dryW, bandEnd - bandStart));
+  const wetW = Math.max(0, 100 - dryW - targetW);
 
   return (
     <div className="w-full">
-      <div className={`relative flex w-full overflow-hidden rounded-full ${trackH}`}>
-        {/* 건조 */}
-        <div className="h-full bg-warn/30" style={{ width: `${bandStart}%` }} />
-        {/* 목표 구간 */}
-        <div
-          className="h-full bg-primary"
-          style={{ width: `${Math.max(0, bandEnd - bandStart)}%` }}
-        />
-        {/* 과습 */}
-        <div className="h-full flex-1 bg-wet/30" />
+      <div
+        className="pixel-track w-full"
+        style={{ height: size === 'lg' ? 38 : 30 }}
+        role="img"
+        aria-label={`토양 수분 ${pct === null ? '측정 불가' : `${pct}%`}, 목표 ${bandStart}~${bandEnd}%`}
+      >
+        {/* 세 구간 — 너비는 식물 프로파일에서 계산된다 */}
+        <span className="h-full bg-warn/45" style={{ width: `${dryW}%` }} />
+        <span className="h-full bg-primary" style={{ width: `${targetW}%` }} />
+        <span className="h-full bg-wet/45" style={{ width: `${wetW}%` }} />
 
-        {/* 현재 위치 */}
+        {/* 현재 위치 — 픽셀 포인터 */}
         {pct !== null ? (
-          <div
-            className="absolute inset-y-0 w-1 -translate-x-1/2 rounded-full bg-ink shadow transition-[left] duration-700"
+          <span
+            className="absolute inset-y-0 w-[3px] -translate-x-1/2 bg-ink transition-[left] duration-500"
             style={{ left: `${pct}%` }}
             aria-hidden
           />
@@ -52,31 +58,41 @@ export function SoilGauge({ soilRaw, profile, size = 'sm', showLabels = true }: 
       </div>
 
       {showLabels ? (
-        <div className="relative mt-1.5 h-8">
-          <span className="absolute left-0 text-[11px] font-bold text-ink-sub">건조</span>
-          <span className="absolute right-0 text-[11px] font-bold text-ink-sub">과습</span>
-          <span
-            className="absolute -translate-x-1/2 text-[11px] font-bold text-primary"
-            style={{ left: `${(bandStart + bandEnd) / 2}%` }}
-          >
-            목표 구간
-          </span>
-          <span
-            className="absolute top-4 -translate-x-1/2 text-[11px] font-bold text-primary"
-            style={{ left: `${bandStart}%` }}
-          >
-            {bandStart}%
-          </span>
-          <span
-            className="absolute top-4 -translate-x-1/2 text-[11px] font-bold text-primary"
-            style={{ left: `${bandEnd}%` }}
-          >
-            {bandEnd}%
-          </span>
-        </div>
+        <>
+          {/* 경계 마커 — 그림이 아니라 HTML 요소 */}
+          <div className="relative h-5">
+            {[bandStart, bandEnd].map((v) => (
+              <span
+                key={v}
+                className="absolute -translate-x-1/2"
+                style={{ left: `${v}%` }}
+                aria-hidden
+              >
+                <PixelIcon name="drop" size={14} />
+              </span>
+            ))}
+          </div>
+
+          <div className="relative h-4 text-[11px] font-bold">
+            <span className="absolute left-0 text-ink-sub">건조</span>
+            <span className="absolute right-0 text-ink-sub">과습</span>
+            <span
+              className="absolute -translate-x-1/2 text-primary"
+              style={{ left: `${bandStart}%` }}
+            >
+              {bandStart}%
+            </span>
+            <span
+              className="absolute -translate-x-1/2 text-primary"
+              style={{ left: `${bandEnd}%` }}
+            >
+              {bandEnd}%
+            </span>
+          </div>
+        </>
       ) : null}
 
-      <div className="mt-1 flex items-baseline justify-between">
+      <div className="mt-2 flex items-baseline justify-between">
         <span
           className={`${size === 'lg' ? 'text-2xl' : 'text-base'} font-extrabold ${
             band ? BAND_TEXT[band] : 'text-ink-sub'

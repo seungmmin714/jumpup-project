@@ -376,3 +376,52 @@ describe('캐릭터·디자인', () => {
     }
   });
 });
+
+describe('토양 게이지 — 식물별 목표 구간 (T-09)', () => {
+  /** 트랙의 세 구간 너비를 % 로 읽는다 */
+  function segmentWidths() {
+    const track = screen.getByRole('img', { name: /토양 수분/ });
+    return Array.from(track.querySelectorAll('span[style*="width"]')).map(
+      (el) => (el as HTMLElement).style.width,
+    );
+  }
+
+  it('방울토마토는 45~65% 구간으로 그려진다', async () => {
+    await connectAndTick();
+    renderApp();
+
+    expect(screen.getByRole('img', { name: /목표 45~65%/ })).toBeTruthy();
+    expect(segmentWidths()).toEqual(['45%', '20%', '35%']);
+  });
+
+  it('식물을 바꾸면 목표 구간이 즉시 따라 움직인다', async () => {
+    await connectAndTick();
+    const view = renderApp('/catalog');
+
+    // 다육식물: soilDry 903 → 15%, soilWet 773 → 35%
+    fireEvent.click(screen.getByText('다육식물').closest('button')!);
+    await flush(1000);
+    view.unmount();
+
+    renderApp();
+    expect(screen.getByRole('img', { name: /목표 15~35%/ })).toBeTruthy();
+    expect(segmentWidths()).toEqual(['15%', '20%', '65%']);
+
+    // 경계 숫자도 그림이 아니라 HTML이므로 같이 바뀐다
+    expect(screen.getByText('15%')).toBeTruthy();
+    expect(screen.getByText('35%')).toBeTruthy();
+  });
+
+  it('같은 화면 안에서 화분 프로파일이 바뀌어도 리렌더로 반영된다', async () => {
+    await connectAndTick();
+    renderApp();
+    expect(segmentWidths()).toEqual(['45%', '20%', '35%']);
+
+    // 스토어를 직접 바꿔 상추(675/545 → 50~70%)로 전환
+    act(() => usePotStore.getState().setPlant('lettuce'));
+    await flush(100);
+
+    expect(segmentWidths()).toEqual(['50%', '20%', '30%']);
+    expect(screen.getByRole('img', { name: /목표 50~70%/ })).toBeTruthy();
+  });
+});

@@ -46,17 +46,26 @@ export function LedSlider({ boostSignal = 0 }: { boostSignal?: number }) {
         </span>
         <span className="text-xs font-semibold text-ink-sub">{live ? `${value}%` : '연결 필요'}</span>
       </div>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        step={5}
-        value={value}
-        disabled={!live || inflight}
-        onChange={(e) => commit(Number(e.target.value))}
-        className="h-11 w-full accent-primary disabled:opacity-40"
-        aria-label="LED 밝기"
-      />
+      {/*
+        input[type=range]의 동작은 그대로 두고 외형만 픽셀로 바꾼다.
+        트랙은 프레임 이미지 위에 값만큼 채우고, 손잡이는 각진 픽셀 노브다.
+      */}
+      <div className="relative flex h-11 items-center">
+        <div className="pixel-track pointer-events-none absolute inset-x-0" style={{ height: 20 }}>
+          <div className="pixel-fill" style={{ width: `${value}%` }} />
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={5}
+          value={value}
+          disabled={!live || inflight}
+          onChange={(e) => commit(Number(e.target.value))}
+          className="pixel-range relative w-full disabled:opacity-40"
+          aria-label="LED 밝기"
+        />
+      </div>
       {error ? <p className="mt-1 text-xs text-danger">{error}</p> : null}
       {!live ? (
         <p className="mt-1 text-xs text-ink-sub">화분에 연결하면 조절할 수 있어요.</p>

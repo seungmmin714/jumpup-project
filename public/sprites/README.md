@@ -11,7 +11,7 @@ npm run prep:sprites
 | `icons.png` | 4×4 | `home` `journal` `catalog` `shop` / `drop` `sun` `drop-plus` `bulb` / `thermometer` `coin` `backpack` `gift` / `link` `lock` `sprout` `watering-can` |
 | `effects.png` | 4×3 | `fan` `wind` `bulb-bright` `splash` / `fire` `snow` `zzz` `question` / `face-happy` `face-sad` `berry` `link-green` |
 | `shop-items.png` | 4×2 | `item-shelf` `item-watering-can` `item-rug` `item-window` / `item-hanging-plant` `item-frame` `item-basket` `item-gift-box` |
-| `buttons.png` | 좌표 지정 | `btn-primary` `btn-secondary` / `bar-soil` `bar-slider` / `bar-progress` `bar-empty` / `btn-inventory` `btn-event` |
+| `buttons.png` | 좌표 지정 | `btn-primary` `btn-secondary` `bar-empty` (나머지 칸은 만들지 않음) |
 | `room.png` | — | 자르지 않고 폭 900px로 축소만 |
 
 ## 스크립트가 하는 일
@@ -44,10 +44,22 @@ import { PixelIcon, ShopItemImage } from '@/components/PixelIcon';
 버튼은 CSS에서 9-슬라이스로 쓴다 (`.btn-primary` / `.btn-secondary`).
 전부 `image-rendering: pixelated`로 그려진다.
 
-## 아직 안 쓰는 것
+## 바 스프라이트에서 쓰는 것은 빈 프레임뿐
 
-`bar-soil` `bar-slider` `bar-progress` `bar-empty` — 눈금과 채움 위치가 그림에
-고정돼 있어서, 식물마다 목표 구간이 달라지는 토양 게이지나 값에 따라 늘어나는
-진행 막대에 그대로 쓸 수 없다. 지금은 CSS로 그린다.
-`btn-inventory` `btn-event` — 아이콘이 그림에 포함돼 있어 코드가 그리는 아이콘과
-겹친다. 두 버튼도 `btn-secondary` 위에 아이콘을 얹는 방식으로 통일했다.
+눈금·채움·숫자가 박힌 칸(`bar-soil` `bar-slider` `bar-progress`)은 **만들지 않는다.**
+식물마다 목표 구간이 다르고(방울토마토 45~65%, 다육 15~35%) 값에 따라 채움이
+늘어나야 해서 고정 그림으로는 맞출 수 없다.
+
+쓰는 건 빈 트랙 `bar-empty` 하나뿐이고, `.pixel-track`이 이걸 9-슬라이스로 두른다.
+그 안의 구간·채움·마커·숫자는 전부 CSS와 HTML이다.
+
+```html
+<div class="pixel-track" style="height:30px">
+  <span style="width:45%"></span>  <!-- 건조 -->
+  <span style="width:20%"></span>  <!-- 목표 구간 -->
+  <span style="width:35%"></span>  <!-- 과습 -->
+</div>
+```
+
+`btn-inventory` `btn-event`도 아이콘이 그림에 포함돼 코드가 그리는 아이콘과
+겹치므로 만들지 않는다. 두 버튼은 `btn-secondary` 위에 아이콘을 얹는다.

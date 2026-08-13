@@ -60,18 +60,17 @@ const SHEETS = [
     rects: {
       'btn-primary': [88, 69, 644, 185],
       'btn-secondary': [838, 69, 629, 185],
-      'bar-soil': [81, 365, 645, 99],
-      'bar-slider': [802, 372, 669, 104],
-      'bar-progress': [83, 595, 644, 94],
       'bar-empty': [812, 595, 651, 94],
-      'btn-inventory': [215, 775, 398, 158],
-      'btn-event': [886, 767, 446, 166],
     },
+    // 빈 칸은 만들지 않는다. 눈금·채움·아이콘이 그림에 박혀 있어 쓸 수 없는 칸들이다:
+    //   bar-soil(눈금 고정) · bar-slider(눈금 고정) · bar-progress(채움 고정)
+    //   btn-inventory · btn-event(아이콘이 그림에 포함 — 코드가 그리는 아이콘과 겹친다)
+    // 쓰는 건 빈 트랙 프레임 하나(bar-empty)뿐이고, 나머지는 CSS로 그린다.
     names: [
       'btn-primary', 'btn-secondary',
-      'bar-soil', 'bar-slider',
-      'bar-progress', 'bar-empty',
-      'btn-inventory', 'btn-event',
+      '', '',
+      '', 'bar-empty',
+      '', '',
     ],
   },
   {

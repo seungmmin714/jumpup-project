@@ -102,20 +102,36 @@ export function EmptyState({
   );
 }
 
+/**
+ * 픽셀 트랙 프레임 + CSS 채움.
+ * 스프라이트에서 쓰는 건 빈 트랙뿐이고, 채운 길이는 값에 따라 계산한다.
+ * 채움은 부드러운 그라데이션 대신 단색 + 계단형 하이라이트(.pixel-fill)다.
+ */
 export function ProgressBar({
   value,
-  tone = 'bg-primary',
+  tone,
   className = '',
+  height = 18,
 }: {
   value: number;
+  /** 채움 색을 바꿀 때만 준다 (CSS 색상값) */
   tone?: string;
   className?: string;
+  height?: number;
 }) {
+  const pct = Math.min(100, Math.max(0, value));
   return (
-    <div className={`h-2 w-full overflow-hidden rounded-full bg-primary-soft ${className}`}>
+    <div
+      className={`pixel-track w-full ${className}`}
+      style={{ height }}
+      role="progressbar"
+      aria-valuenow={Math.round(pct)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
       <div
-        className={`h-full rounded-full transition-[width] duration-500 ${tone}`}
-        style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+        className="pixel-fill"
+        style={{ width: `${pct}%`, ...(tone ? { backgroundColor: tone } : null) }}
       />
     </div>
   );
