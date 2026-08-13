@@ -10,6 +10,7 @@ import { SensorStrip } from './SensorStrip';
 import { SolutionCard } from './SolutionCard';
 import { LedSlider } from './LedSlider';
 import { PotPicker } from './PotPicker';
+import { BleModeCard } from './BleModeCard';
 import { useOfflineLatest } from '@/lib/useOfflineLatest';
 import { allSensorsMissing, useTelemetryStore } from '@/store/telemetryStore';
 import { isLive, isProtoOk, useConnectionStore } from '@/store/connectionStore';
@@ -60,6 +61,9 @@ export default function HomePage() {
           </Banner>
         ) : null}
       </div>
+
+      {/* 미연결일 때만 — 시뮬/실기기 전환과 연결 진단 */}
+      {!live ? <BleModeCard /> : null}
 
       {pots.length === 0 ? (
         <Card>

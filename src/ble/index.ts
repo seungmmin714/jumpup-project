@@ -1,27 +1,31 @@
 // T-06 DoD: Mock ↔ 실제 전환이 환경변수만으로 된다.
+// 여기에 더해 런타임 전환(?ble=real / 설정 저장)도 지원한다 — 실기기 확인 때 재빌드가 필요 없도록.
 
 import { WebBleClient, isWebBluetoothSupported, type BleClient } from './BleClient';
 import { MockBleClient } from './MockBleClient';
+import { resolveBleMode, type BleMode } from './mode';
 
 export * from './types';
 export { isWebBluetoothSupported } from './BleClient';
 export type { BleClient } from './BleClient';
 export { MockBleClient } from './MockBleClient';
-
-const MODE = (import.meta.env.VITE_BLE_MODE ?? 'mock') as 'mock' | 'real';
-
-/** `?dev=1`이면 실제 모드로 빌드했더라도 Mock으로 강제 전환한다. */
-function wantsMock(): boolean {
-  if (MODE === 'mock') return true;
-  if (typeof window === 'undefined') return false;
-  return new URLSearchParams(window.location.search).get('ble') === 'mock';
-}
+export * from './mode';
 
 let instance: BleClient | null = null;
+let activeMode: BleMode = 'mock';
 
 export function getBleClient(): BleClient {
-  if (!instance) instance = wantsMock() ? new MockBleClient() : new WebBleClient();
+  if (!instance) {
+    activeMode = resolveBleMode();
+    instance = activeMode === 'mock' ? new MockBleClient() : new WebBleClient();
+  }
   return instance;
+}
+
+/** 실제로 이번 실행에서 쓰이고 있는 모드 */
+export function activeBleMode(): BleMode {
+  getBleClient();
+  return activeMode;
 }
 
 export const isMockMode = (): boolean => getBleClient().isMock();

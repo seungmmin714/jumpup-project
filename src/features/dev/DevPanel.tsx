@@ -2,7 +2,7 @@
 // mood 7종 / 연결상태 7종 / 센서 결측을 강제 주입해 하드웨어 없이 전 화면을 검수한다.
 
 import { useEffect, useState } from 'react';
-import { getMockClient, isMockMode } from '@/ble';
+import { activeBleMode, bleDiagnostics, getMockClient, isMockMode, setBleMode } from '@/ble';
 import { MOOD_ORDER, moodInfo } from '@/lib/mood';
 import { useConnectionStore } from '@/store/connectionStore';
 import { useTelemetryStore } from '@/store/telemetryStore';
@@ -87,6 +87,30 @@ export function DevPanel() {
           <Btn onClick={() => void connectPot()}>connect</Btn>
           <Btn onClick={() => void disconnectPot()}>disconnect</Btn>
         </Row>
+      </Section>
+
+      <Section title="BLE 모드 (새로고침됨)">
+        <Row>
+          {(['mock', 'real'] as const).map((m) => (
+            <Btn
+              key={m}
+              active={activeBleMode() === m}
+              onClick={() => {
+                setBleMode(m);
+                window.location.reload();
+              }}
+            >
+              {m}
+            </Btn>
+          ))}
+        </Row>
+        <div className="mt-1.5 space-y-0.5">
+          {bleDiagnostics(activeBleMode()).map((d) => (
+            <p key={d.key} className="font-mono text-[10px] text-neutral-400">
+              {d.level === 'ok' ? '✅' : d.level === 'warn' ? '⚠️' : '⛔'} {d.title}
+            </p>
+          ))}
+        </div>
       </Section>
 
       {!mock ? (

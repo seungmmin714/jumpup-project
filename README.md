@@ -42,7 +42,69 @@ Vite 개발 서버가 `/api`를 `localhost:4000`으로 프록시한다.
 | `VITE_BLE_MODE` | `mock` \| `real` | BLE 클라이언트 전환. 코드 수정 없이 바뀐다 |
 | `VITE_API_BASE` | `/api` | 서버 API 기본 경로 |
 
-실기기 테스트는 **안드로이드 Chrome + HTTPS(또는 localhost)** 에서만 된다. iOS는 조회 전용이다.
+---
+
+## 실기기(진짜 화분)에 연결하기
+
+시뮬레이터와 실제 Web Bluetooth 구현은 **같은 인터페이스**를 쓴다. 화면 코드는 한 줄도 바뀌지 않는다.
+
+### 1. 모드 전환 — 셋 중 아무거나
+
+| 방법 | 언제 쓰나 |
+|---|---|
+| 홈 화면의 `실기기로` 버튼 | 가장 간단. 새로고침 후 바로 적용 |
+| 주소에 `?ble=real` 추가 | 링크로 공유할 때 |
+| `.env`의 `VITE_BLE_MODE=real` | 배포 기본값을 바꿀 때 |
+
+앞의 두 방법은 브라우저에 저장돼 다음 방문에도 유지된다. 되돌리려면 홈에서 `시뮬로`를 누르거나
+`?ble=mock`으로 접속한다.
+
+### 2. HTTPS — 대부분 여기서 막힌다
+
+Web Bluetooth는 **보안 컨텍스트(HTTPS 또는 localhost)** 에서만 동작한다.
+휴대폰에서 `http://192.168.0.x:5173`으로 열면 `navigator.bluetooth` 자체가 없어 연결 버튼이 죽는다.
+
+```bash
+npm run dev:https      # 자체서명 인증서로 HTTPS 기동
+```
+
+휴대폰에서 `https://<PC의 LAN IP>:5173` 으로 접속하고, 인증서 경고는 **고급 → 계속**으로 넘어간다.
+
+USB가 편하면 포트 포워딩도 된다. 휴대폰을 USB로 연결하고 PC Chrome에서
+`chrome://inspect/#devices` → Port forwarding에 `5173 → localhost:5173`을 등록하면
+휴대폰에서 `http://localhost:5173`으로 열 수 있고, localhost는 보안 컨텍스트로 인정된다.
+
+홈 화면의 **연결 진단**이 지금 환경에서 무엇이 막혀 있는지(HTTPS·브라우저·모드) 알려준다.
+
+### 3. 화분 쪽에서 맞춰야 하는 것
+
+| 항목 | 값 |
+|---|---|
+| 장치명 | `GROWME01` ~ `GROWME99` (접두어 `GROWME`로 검색한다) |
+| Service | `0000ffe0-0000-1000-8000-00805f9b34fb` |
+| Characteristic | `0000ffe1-...` — Notify(화분→웹) / Write(웹→화분) |
+| 첫 패킷 | 부팅 직후 `H,GROWME,3,2.0\n` — protoVer가 3이 아니면 앱이 제어를 잠근다 |
+| 센서 패킷 | `D,<soilRaw>,<tempX10>,<humi>,<lightRaw>,<mood>,<seq>\n` 5초 주기 |
+| 응답 | 명령 수신 즉시 `A,<cmd>,<result>\n` |
+
+화분이 `A` 응답을 보내지 않으면 앱은 3초 뒤 타임아웃 처리하고 버튼을 다시 풀어준다.
+
+### 4. 하드웨어 없이 실제 경로 검증하기
+
+실기기 코드 경로는 가짜 GATT 스택으로 이미 테스트돼 있다
+([WebBleClient.test.ts](src/ble/WebBleClient.test.ts)) — 기기 탐색 필터, 청크 재조립, 20바이트 분할 write,
+15초 STALE, 끊김 후 1초·2초·4초 재연결, 오류 분류까지.
+
+```bash
+npm test
+```
+
+실기기에서 연결이 안 되면 `npm test`부터 돌려서 **웹 문제인지 화분 문제인지** 갈라볼 수 있다.
+테스트가 통과하는데 실기기가 안 붙으면 원인은 HTTPS 아니면 화분 펌웨어 쪽이다.
+
+---
+
+iOS는 Web Bluetooth를 지원하지 않아 조회 전용이다.
 
 ---
 
