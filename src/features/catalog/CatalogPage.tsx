@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { cmdQuery, cmdSetProfile } from '@/ble/constants';
-import { fetchPlants } from '@/api/plants';
+import { fetchPlants, setPotPlant } from '@/api/plants';
 import { PLANTS } from '@/data/plants';
 import { sendCommand } from '@/store/bleBridge';
 import { canControl, useConnectionStore } from '@/store/connectionStore';
@@ -32,6 +32,7 @@ export default function CatalogPage() {
 
   const apply = async (p: Plant) => {
     setPlant(p.plantId);
+    if (potId) setPotPlant(potId, p.plantId);
     setMsg(null);
     if (!live) {
       setMsg({ tone: 'info', text: '앱에만 저장했어요. 화분에 연결하면 자동으로 반영돼요.' });
