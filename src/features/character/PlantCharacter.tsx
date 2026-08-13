@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { moodInfo } from '@/lib/mood';
+import { PixelIcon } from '@/components/PixelIcon';
 import type { Mood, Plant } from '@/ble/types';
 
 interface MoodStyle {
@@ -73,6 +74,8 @@ interface Props {
   size?: 'sm' | 'md' | 'lg';
   /** 회복 연출 중에는 기분과 무관하게 밝게 */
   celebrating?: boolean;
+  /** 부모가 크기를 정하는 경우(씬처럼 % 높이) 고정 크기를 쓰지 않는다 */
+  fill?: boolean;
 }
 
 // 전처리(scripts/prep-characters.mjs)를 거친 아트는 정사각형이고 발이 아래끝에 맞춰져 있다.
@@ -90,6 +93,7 @@ export function PlantCharacter({
   stale = false,
   size = 'lg',
   celebrating = false,
+  fill = false,
 }: Props) {
   const src = plant.characterMoodImages?.[mood] ?? plant.characterImage;
   const [failed, setFailed] = useState(false);
@@ -100,7 +104,7 @@ export function PlantCharacter({
   useEffect(() => setFailed(false), [src]);
 
   return (
-    <div className={`relative ${SIZE[size]} shrink-0`}>
+    <div className={`relative shrink-0 ${fill ? 'aspect-square h-full' : SIZE[size]}`}>
       {failed ? (
         // 아트가 아직 없을 때의 대체 표정
         <div
@@ -142,7 +146,8 @@ function Particles({ icons }: { icons: string[] }) {
             animationDelay: `${i * 700}ms`,
           }}
         >
-          {icon}
+          {/* 물방울은 도트 아이콘이 있으므로 그걸 쓴다 */}
+          {icon === '💧' ? <PixelIcon name="drop" size={18} /> : icon}
         </span>
       ))}
     </div>

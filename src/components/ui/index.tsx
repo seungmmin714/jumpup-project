@@ -84,12 +84,18 @@ export function SectionTitle({ children, right }: { children: ReactNode; right?:
   );
 }
 
-export function EmptyState({ icon, title, hint }: { icon: string; title: string; hint?: string }) {
+export function EmptyState({
+  icon,
+  title,
+  hint,
+}: {
+  icon: ReactNode;
+  title: string;
+  hint?: string;
+}) {
   return (
     <div className="card flex flex-col items-center gap-2 py-12 text-center">
-      <span className="pixelated text-4xl" aria-hidden>
-        {icon}
-      </span>
+      {icon}
       <p className="font-bold text-ink">{title}</p>
       {hint ? <p className="text-xs text-ink-sub">{hint}</p> : null}
     </div>

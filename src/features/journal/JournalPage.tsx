@@ -6,14 +6,15 @@ import { fetchCareLogs, type CareLog } from '@/api/pots';
 import { selectedPlant, usePotStore } from '@/store/potStore';
 import { Badge, Card, EmptyState } from '@/components/ui';
 import { PageHeader } from '@/components/AppLayout';
+import { PixelIcon, type IconName } from '@/components/PixelIcon';
 import { fmtClock, fmtDay, fmtPct, timeAgo } from '@/lib/format';
 import { uploadQueue, type QueueStatus } from '@/api/uploadQueue';
 
-const TYPE_META: Record<CareLog['type'], { icon: string; label: string }> = {
-  water: { icon: '💧', label: '물 주기' },
-  move: { icon: '📦', label: '자리 옮김' },
-  ventilate: { icon: '🌬', label: '환기' },
-  note: { icon: '📝', label: '메모' },
+const TYPE_META: Record<CareLog['type'], { icon: IconName; label: string }> = {
+  water: { icon: 'drop', label: '물 주기' },
+  move: { icon: 'sprout', label: '자리 옮김' },
+  ventilate: { icon: 'sun', label: '환기' },
+  note: { icon: 'journal', label: '메모' },
 };
 
 export default function JournalPage() {
@@ -63,9 +64,7 @@ export default function JournalPage() {
       {/* 마지막 급수 */}
       <Card>
         <div className="flex items-center gap-4">
-          <span className="pixelated text-4xl leading-none" aria-hidden>
-            🪣
-          </span>
+          <PixelIcon name="watering-can" size={48} />
           <div className="min-w-0 flex-1">
             <Badge>마지막 급수</Badge>
             <p className="mt-1 text-2xl font-black leading-tight text-ink">
@@ -100,7 +99,7 @@ export default function JournalPage() {
         <p className="py-8 text-center text-sm text-ink-sub">불러오는 중…</p>
       ) : sorted.length === 0 ? (
         <EmptyState
-          icon="📔"
+          icon={<PixelIcon name="journal" size={48} />}
           title={failed ? '기록을 불러오지 못했어요' : '아직 기록이 없어요'}
           hint={
             failed
@@ -119,9 +118,7 @@ export default function JournalPage() {
                   return (
                     <li key={log.id ?? `${log.at}-${i}`}>
                       <div className="card flex items-center gap-3 py-3">
-                        <span className="pixelated text-xl leading-none" aria-hidden>
-                          {meta.icon}
-                        </span>
+                        <PixelIcon name={meta.icon} size={24} />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-bold text-ink">
                             {meta.label}

@@ -12,6 +12,7 @@ import { profileOf, sameProfile, selectedPlant, usePotStore } from '@/store/potS
 import { Badge, Banner, Card } from '@/components/ui';
 import { PageHeader } from '@/components/AppLayout';
 import { PlantCharacter } from '@/features/character/PlantCharacter';
+import { PixelIcon } from '@/components/PixelIcon';
 import type { Plant } from '@/ble/types';
 
 export default function CatalogPage() {
@@ -128,21 +129,15 @@ export default function CatalogPage() {
 
                     <dl className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-bold text-ink">
                       <span className="flex items-center gap-1">
-                        <span className="pixelated" aria-hidden>
-                          💧
-                        </span>
+                        <PixelIcon name="drop" size={16} />
                         {p.targetMinPct}~{p.targetMaxPct}%
                       </span>
                       <span className="flex items-center gap-1">
-                        <span className="pixelated" aria-hidden>
-                          🌡
-                        </span>
+                        <PixelIcon name="thermometer" size={16} />
                         {p.tempMinX10 / 10}~{p.tempMaxX10 / 10}℃
                       </span>
                       <span className="flex items-center gap-1">
-                        <span className="pixelated" aria-hidden>
-                          🚿
-                        </span>
+                        <PixelIcon name="watering-can" size={16} />
                         {p.waterMl}ml
                       </span>
                     </dl>

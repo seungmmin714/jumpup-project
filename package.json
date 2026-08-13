@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "lint": "tsc -b --noEmit",
     "prep:characters": "node scripts/prep-characters.mjs",
+    "prep:sprites": "node scripts/slice-sprites.mjs",
     "server": "npm --prefix server start",
     "server:install": "npm --prefix server install"
   },

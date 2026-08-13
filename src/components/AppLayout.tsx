@@ -1,12 +1,13 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { PixelIcon, type IconName } from './PixelIcon';
 
 // §9.1 하단 탭 — 홈 · 일지 · 도감 · 상점
-const TABS = [
-  { to: '/', label: '홈', icon: '🏡' },
-  { to: '/journal', label: '일지', icon: '📖' },
-  { to: '/catalog', label: '도감', icon: '🌱' },
-  { to: '/shop', label: '상점', icon: '🧺' },
-] as const;
+const TABS: Array<{ to: string; label: string; icon: IconName }> = [
+  { to: '/', label: '홈', icon: 'home' },
+  { to: '/journal', label: '일지', icon: 'journal' },
+  { to: '/catalog', label: '도감', icon: 'catalog' },
+  { to: '/shop', label: '상점', icon: 'shop' },
+];
 
 export function AppLayout() {
   const { pathname } = useLocation();
@@ -51,12 +52,11 @@ function BottomTabs() {
             >
               {({ isActive }) => (
                 <>
-                  <span
-                    className={`text-lg leading-none ${isActive ? '' : 'opacity-50 grayscale'}`}
-                    aria-hidden
-                  >
-                    {t.icon}
-                  </span>
+                  <PixelIcon
+                    name={t.icon}
+                    size={24}
+                    className={isActive ? '' : 'opacity-45 grayscale'}
+                  />
                   {t.label}
                 </>
               )}

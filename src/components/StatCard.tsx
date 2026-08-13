@@ -1,6 +1,7 @@
 // 시안의 상단 칩 — 아이콘 + 값 + 상태 문구가 한 줄에 들어간다.
 
 import type { ReactNode } from 'react';
+import { PixelIcon, type IconName } from './PixelIcon';
 
 /** 온도·습도·조도처럼 한 줄에 셋이 나란히 놓이는 압축 칩 */
 export function StatChip({
@@ -18,9 +19,7 @@ export function StatChip({
 }) {
   return (
     <div className="flex min-w-0 items-center gap-1.5 rounded-card bg-card px-2.5 py-2 shadow-card">
-      <span className="pixelated shrink-0 text-base leading-none" aria-hidden>
-        {icon}
-      </span>
+      {icon}
       <div className="min-w-0">
         <p className={`truncate text-[13px] font-extrabold leading-tight ${tone ?? 'text-ink'}`}>
           {value}
@@ -44,7 +43,7 @@ export function PillButton({
   disabled = false,
   onClick,
 }: {
-  icon: string;
+  icon: IconName;
   label: string;
   badge?: boolean;
   disabled?: boolean;
@@ -57,9 +56,7 @@ export function PillButton({
       disabled={disabled}
       className="tap relative flex items-center justify-center gap-2 rounded-card bg-card px-4 py-3 text-sm font-bold text-ink shadow-card transition active:scale-[0.98] disabled:opacity-50"
     >
-      <span className="pixelated text-base" aria-hidden>
-        {icon}
-      </span>
+      <PixelIcon name={icon} size={22} />
       {label}
       {badge ? (
         <span className="absolute right-3 top-2 h-2 w-2 rounded-full bg-danger" aria-hidden />

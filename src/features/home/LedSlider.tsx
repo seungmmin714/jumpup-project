@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { cmdLed } from '@/ble/constants';
 import { sendCommand } from '@/store/bleBridge';
 import { canControl, useConnectionStore } from '@/store/connectionStore';
+import { PixelIcon } from '@/components/PixelIcon';
 
 const DEBOUNCE_MS = 300;
 
@@ -39,7 +40,10 @@ export function LedSlider({ boostSignal = 0 }: { boostSignal?: number }) {
   return (
     <div className="card">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm font-bold text-ink">💡 LED 밝기</span>
+        <span className="flex items-center gap-1.5 text-sm font-bold text-ink">
+          <PixelIcon name="bulb" size={18} />
+          LED 밝기
+        </span>
         <span className="text-xs font-semibold text-ink-sub">{live ? `${value}%` : '연결 필요'}</span>
       </div>
       <input

@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { ConnectionBadge, ConnectionBanners } from '@/components/ConnectionBadge';
 import { Banner, Card, ProgressBar } from '@/components/ui';
 import { PillButton, StatChip } from '@/components/StatCard';
+import { PixelIcon } from '@/components/PixelIcon';
 import { SoilGauge } from '@/components/SoilGauge';
 import { CelebrationOverlay } from '@/features/character/Character';
 import { PlantScene } from './PlantScene';
@@ -92,20 +93,20 @@ export default function HomePage() {
       {/* ② 온도 · 공기습도 · 조도 */}
       <div className="grid grid-cols-3 gap-2">
         <StatChip
-          icon={temp === 'hot' ? '🔥' : temp === 'cold' ? '🥶' : '☀️'}
+          icon={<PixelIcon name={temp === 'good' ? 'sun' : 'thermometer'} size={22} />}
           value={latest?.temperature === null || !latest ? '--' : `${latest.temperature.toFixed(0)}℃`}
           caption={temp ? TEMP_BAND_LABEL[temp] : '온도'}
           warned={isFieldWarned(streak, 'temp')}
           tone={temp === 'hot' ? 'text-danger' : temp === 'cold' ? 'text-wet' : 'text-ink'}
         />
         <StatChip
-          icon="💧"
+          icon={<PixelIcon name="drop" size={22} />}
           value={latest?.humidity === null || !latest ? '--' : `${latest.humidity}%`}
           caption={humi ? HUMIDITY_BAND_LABEL[humi] : '공기 습도'}
           warned={isFieldWarned(streak, 'humi')}
         />
         <StatChip
-          icon="💡"
+          icon={<PixelIcon name="bulb" size={22} />}
           value={latest?.lightLevel === null || !latest ? '--' : `${latest.lightLevel}`}
           caption={light ? LIGHT_BAND_LABEL[light] : '조도'}
           warned={isFieldWarned(streak, 'light')}
@@ -127,7 +128,10 @@ export default function HomePage() {
 
       {/* ④ 토양수분 게이지 + ⑤ 물 주기 */}
       <Card>
-        <p className="mb-3 text-center text-sm font-bold text-ink">토양 수분 상태 💧</p>
+        <p className="mb-3 flex items-center justify-center gap-1.5 text-sm font-bold text-ink">
+          <PixelIcon name="drop-plus" size={20} />
+          토양 수분 상태
+        </p>
         <SoilGauge soilRaw={latest?.soilRaw ?? null} profile={plant} />
       </Card>
 
@@ -137,7 +141,7 @@ export default function HomePage() {
         onClick={() => navigate('/water')}
         disabled={!protoOk}
       >
-        💧 물 주기
+        <PixelIcon name="drop" size={22} /> 물 주기
         {mood === 1 ? <span className="text-xs font-normal opacity-90">지금 필요해요!</span> : null}
       </button>
 
@@ -182,8 +186,8 @@ export default function HomePage() {
       <LedSlider boostSignal={ledBoost} />
 
       <div className="grid grid-cols-2 gap-2">
-        <PillButton icon="🎒" label="인벤토리" disabled />
-        <PillButton icon="🎁" label="이벤트" badge disabled />
+        <PillButton icon="backpack" label="인벤토리" disabled />
+        <PillButton icon="gift" label="이벤트" badge disabled />
       </div>
     </div>
   );

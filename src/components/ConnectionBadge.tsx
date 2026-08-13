@@ -5,6 +5,7 @@ import { BADGE, ERROR_MESSAGE, isLive, isProtoOk, useConnectionStore } from '@/s
 import { connectPot, disconnectPot } from '@/store/bleBridge';
 import { useTelemetryStore } from '@/store/telemetryStore';
 import { Banner } from './ui';
+import { PixelIcon } from './PixelIcon';
 import { durationAgo } from '@/lib/format';
 
 /** ① 연결 상태 + 화분명 — 시안처럼 한 줄로 압축한다 */
@@ -62,6 +63,7 @@ export function ConnectionBadge() {
           onClick={() => void onConnect()}
           disabled={busy || !canUseBle() || conn.state === 'REQUESTING' || conn.state === 'CONNECTING'}
         >
+          <PixelIcon name="link" size={14} className="mr-1 align-[-2px]" />
           {conn.state === 'CONNECTING' ? '연결 중…' : '화분 연결하기'}
         </button>
       )}

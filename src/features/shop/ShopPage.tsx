@@ -3,11 +3,11 @@
 
 import { Badge, Card } from '@/components/ui';
 import { PageHeader } from '@/components/AppLayout';
+import { PixelIcon, ShopItemImage, type ShopItemIcon } from '@/components/PixelIcon';
 import { useCharacterStore } from '@/store/characterStore';
 
 interface ShopItem {
-  id: string;
-  icon: string;
+  id: ShopItemIcon;
   name: string;
   /** 해금에 필요한 레벨 */
   requiredLevel: number;
@@ -15,12 +15,12 @@ interface ShopItem {
 
 /** 방 꾸미기 아이템 미리보기. 아직 구매 기능은 없다. */
 const ITEMS: ShopItem[] = [
-  { id: 'shelf', icon: '🪵', name: '나무 선반', requiredLevel: 5 },
-  { id: 'watering-can', icon: '🪣', name: '물뿌리개', requiredLevel: 5 },
-  { id: 'rug', icon: '🟤', name: '동그란 러그', requiredLevel: 10 },
-  { id: 'window', icon: '🪟', name: '창문', requiredLevel: 15 },
-  { id: 'hanging', icon: '🪴', name: '행잉 플랜트', requiredLevel: 20 },
-  { id: 'frame', icon: '🖼', name: '액자', requiredLevel: 25 },
+  { id: 'shelf', name: '나무 선반', requiredLevel: 5 },
+  { id: 'watering-can', name: '물뿌리개', requiredLevel: 5 },
+  { id: 'rug', name: '동그란 러그', requiredLevel: 10 },
+  { id: 'window', name: '창문', requiredLevel: 15 },
+  { id: 'hanging-plant', name: '행잉 플랜트', requiredLevel: 20 },
+  { id: 'frame', name: '액자', requiredLevel: 25 },
 ];
 
 export default function ShopPage() {
@@ -28,13 +28,19 @@ export default function ShopPage() {
 
   return (
     <div className="space-y-3">
-      <PageHeader title="상점" right={<Badge tone="muted">Lv.{level}</Badge>} />
+      <PageHeader
+        title="상점"
+        right={
+          <Badge tone="muted">
+            <PixelIcon name="coin" size={14} />
+            Lv.{level}
+          </Badge>
+        }
+      />
 
       <Card>
         <div className="flex items-center gap-4">
-          <span className="pixelated text-4xl leading-none" aria-hidden>
-            🛍️
-          </span>
+          <ShopItemImage name="gift-box" size={56} />
           <div className="min-w-0">
             <p className="text-lg font-black text-ink">준비 중이에요</p>
             <p className="mt-1 text-xs leading-relaxed text-ink-sub">
@@ -51,15 +57,17 @@ export default function ShopPage() {
           const unlocked = level >= item.requiredLevel;
           return (
             <li key={item.id}>
-              <div className={`card relative flex flex-col items-center gap-2 py-5 ${unlocked ? '' : 'opacity-60'}`}>
+              <div
+                className={`card relative flex flex-col items-center gap-2 py-5 ${
+                  unlocked ? '' : 'opacity-70'
+                }`}
+              >
                 {!unlocked ? (
-                  <span className="absolute right-3 top-3 text-sm" aria-label="잠김">
-                    🔒
+                  <span className="absolute right-3 top-3">
+                    <PixelIcon name="lock" size={18} alt="잠김" />
                   </span>
                 ) : null}
-                <span className="pixelated text-4xl leading-none" aria-hidden>
-                  {item.icon}
-                </span>
+                <ShopItemImage name={item.id} size={72} className={unlocked ? '' : 'grayscale'} />
                 <p className="text-sm font-bold text-ink">{item.name}</p>
                 <p className="text-[11px] font-bold text-ink-sub">
                   {unlocked ? '준비 중' : `Lv.${item.requiredLevel} 필요`}
