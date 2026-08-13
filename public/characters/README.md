@@ -11,11 +11,24 @@
 | `monstera.png` | 몬스테라 | `monstera` |
 | `succulent.png` | 다육식물 | `succulent` |
 
+> ⚠️ 파일명은 **`basil.png`처럼 이름만** 쓴다. 저장 대화상자에 `public/characters/basil.png`처럼
+> 경로를 통째로 입력하면 macOS가 `/`를 `:`로 바꿔 `public:characters:basil.png`라는
+> **한 개의 파일**을 만들어 버린다. 그러면 브라우저가 404를 받고 텍스트 표정으로 대체된다.
+
 ## 규격
 
 - **정사각형에 가까운 세로 비율**(2:3까지 허용). 화면에서 `object-contain`으로 들어간다.
 - **배경은 투명(PNG)** 이 가장 좋다. 크림색 배경이 깔린 이미지도 씬 배경과 톤이 비슷해 무난하다.
-- 짧은 변 기준 **최소 512px**, 권장 1024px. 파일당 300KB 이하로 줄여서 넣는다.
+- 화면에서는 세로 208px로 그려진다. 짧은 변 기준 **340px 이상**이면 3배 화면에서도 선명하다.
+  파일당 250KB를 넘기지 않는다 — 5장이 한 번에 로딩되므로 원본(1024×1536, 장당 1.3MB)을
+  그대로 넣으면 모바일 첫 로딩이 무거워진다.
+
+```bash
+# 원본을 assets-source/characters에 두고, 표시용만 줄여서 public에 넣는다
+sips -Z 512 assets-source/characters/basil.png --out public/characters/basil.png
+```
+
+`assets-source/`는 gitignore돼 있다. 원본이 필요하면 그쪽을 쓰고, 커밋되는 건 축소본뿐이다.
 - 파일이 없으면 앱은 자동으로 텍스트 표정(`(◕‿◕)` 등)으로 대체하므로, 없어도 화면은 깨지지 않는다.
 
 ## 기분(mood) 표현

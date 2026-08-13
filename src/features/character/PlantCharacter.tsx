@@ -75,10 +75,12 @@ interface Props {
   celebrating?: boolean;
 }
 
+// 캐릭터 아트는 세로가 긴 2:3 비율이라, object-contain에서 높이가 크기를 결정한다.
+// 정사각 박스를 쓰면 실제로 그려지는 캐릭터가 작아 보여서 세로를 넉넉히 준다.
 const SIZE = {
-  sm: 'h-16 w-16',
-  md: 'h-28 w-28',
-  lg: 'h-44 w-44',
+  sm: 'h-16 w-12',
+  md: 'h-28 w-20',
+  lg: 'h-52 w-44',
 } as const;
 
 export function PlantCharacter({

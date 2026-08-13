@@ -13,3 +13,6 @@ coverage
 .vscode/*
 !.vscode/extensions.json
 server/node_modules
+
+# 캐릭터 원본(1024x1536). public/characters에는 표시용 축소본만 커밋한다.
+assets-source
