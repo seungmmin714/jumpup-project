@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-cream-100 text-olive-900 antialiased;
+    /* 모바일 세로 전용 (§14) */
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  /* §14 터치 타겟 최소 44×44px */
+  .tap {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  .card {
+    @apply rounded-2xl bg-white/80 p-4 shadow-sm ring-1 ring-olive-100;
+  }
+
+  .btn {
+    @apply tap inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .btn-primary {
+    @apply btn bg-olive-600 text-cream-50 shadow-sm;
+  }
+
+  .btn-secondary {
+    @apply btn bg-white text-olive-800 ring-1 ring-olive-200;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-olive-700;
+  }
+
+  /* §14 숫자보다 상태 문구를 크게 */
+  .state-word {
+    @apply text-2xl font-bold leading-tight;
+  }
+
+  .state-num {
+    @apply text-sm font-medium text-olive-600;
+  }
+
+  .label {
+    @apply text-xs font-medium text-olive-500;
+  }
+}
+
+/* 접근성: 모션 최소화 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
