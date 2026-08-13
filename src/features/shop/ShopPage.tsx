@@ -10,7 +10,15 @@ import { PixelIcon, ShopItemImage, type ShopItemIcon } from '@/components/PixelI
 import { useCharacterStore } from '@/store/characterStore';
 import { usePotStore } from '@/store/potStore';
 import { useRoomStore } from '@/store/roomStore';
-import { ROOM_ITEMS } from '@/data/roomItems';
+import { SHOP_ORDER } from '@/data/roomItems';
+
+/**
+ * 해커톤 시연용 — 레벨과 무관하게 전 아이템을 구매할 수 있게 연다.
+ *
+ * 처음 들어온 사람도 Lv.1이라 잠금이 걸려 있으면 방 꾸미기를 아예 못 본다.
+ * 레벨 제한을 되살리려면 이 값만 false로 바꾸면 된다 — 그 외 로직은 그대로다.
+ */
+const UNLOCK_ALL_FOR_DEMO = true;
 
 export default function ShopPage() {
   const level = useCharacterStore((s) => s.level);
@@ -52,8 +60,8 @@ export default function ShopPage() {
       ) : null}
 
       <ul className="grid grid-cols-2 gap-3">
-        {ROOM_ITEMS.map((item) => {
-          const unlocked = level >= item.requiredLevel;
+        {SHOP_ORDER.map((item) => {
+          const unlocked = UNLOCK_ALL_FOR_DEMO || level >= item.requiredLevel;
           const isOwned = owned.includes(item.id);
           const isPlaced = placed.includes(item.id);
           const canAct = potId !== null && (isOwned || unlocked);
@@ -75,6 +83,9 @@ export default function ShopPage() {
                 </div>
 
                 <p className="text-sm font-bold text-ink">{item.name}</p>
+                {!UNLOCK_ALL_FOR_DEMO || isOwned ? null : (
+                  <p className="text-[10px] font-semibold text-ink-sub">Lv.{item.requiredLevel} 아이템</p>
+                )}
 
                 {isOwned ? (
                   <button

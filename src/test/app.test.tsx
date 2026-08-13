@@ -12,6 +12,7 @@ import { useConnectionStore } from '@/store/connectionStore';
 import { usePotStore } from '@/store/potStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { useRoomStore } from '@/store/roomStore';
+import { SHOP_ORDER } from '@/data/roomItems';
 
 function renderApp(route = '/') {
   return render(
@@ -500,14 +501,34 @@ describe('방 꾸미기 (상점 → 홈)', () => {
     expect(roomItems()).toContain('/room/shelf.png');
   });
 
-  it('레벨이 모자라면 구매할 수 없다', async () => {
+  it('상점은 필요 레벨이 낮은 순서로 진열된다', async () => {
+    await connectAndTick();
+    renderApp('/shop');
+
+    const names = SHOP_ORDER.map((i) => i.name);
+    expect(names).toEqual(['나무 선반', '물뿌리개', '동그란 러그', '창문', '행잉 플랜트', '액자']);
+    expect(SHOP_ORDER.map((i) => i.requiredLevel)).toEqual([5, 5, 10, 15, 20, 25]);
+
+    // 화면에도 그 순서대로 나온다
+    const shown = screen
+      .getAllByRole('listitem')
+      .map((li) => li.textContent ?? '')
+      .filter((t) => names.some((n) => t.includes(n)));
+    expect(shown[0]).toContain('나무 선반');
+    expect(shown[shown.length - 1]).toContain('액자');
+  });
+
+  it('시연용 해금 — Lv.1이어도 전부 구매할 수 있다', async () => {
     act(() => useCharacterStore.setState({ level: 1 }));
     await connectAndTick();
     renderApp('/shop');
 
-    const card = screen.getByText('액자').closest('div')!;
-    const btn = within(card).getByRole('button', { name: 'Lv.25 필요' });
-    expect(btn).toHaveProperty('disabled', true);
+    for (const name of ['나무 선반', '액자', '행잉 플랜트']) {
+      const card = screen.getByText(name).closest('div')!;
+      const btn = within(card).getByRole('button', { name: '구매하기' });
+      expect(btn).toHaveProperty('disabled', false);
+    }
+    expect(screen.queryByText(/필요$/)).toBeNull();
   });
 
   it('화분마다 방이 따로 저장된다', async () => {

@@ -127,10 +127,59 @@ function unpremultiply(data, i, alpha, bg) {
   }
 }
 
+/**
+ * 배경으로 볼 색들을 테두리에서 찾는다.
+ *
+ * 시트 배경이 단색이 아니라 **두 톤의 체커보드**(254,254,254 / 242,242,242)인
+ * 경우가 있다. 한 색만 기준으로 삼으면 다른 톤이 임계값 밖으로 밀려나
+ * 옅은 격자무늬가 그대로 남는다. 테두리에 실제로 나타나는 색을 모아 두고,
+ * 거리 판정은 그중 가장 가까운 색을 기준으로 한다.
+ */
+function detectBackgroundColors(png) {
+  const { width: w, height: h, data } = png;
+  const freq = new Map();
+  const sample = (x, y) => {
+    const i = (y * w + x) * 4;
+    // 1단계 양자화 — 미세한 노이즈를 같은 색으로 묶는다
+    const key = `${data[i] >> 2},${data[i + 1] >> 2},${data[i + 2] >> 2}`;
+    const e = freq.get(key);
+    if (e) e.n += 1;
+    else freq.set(key, { n: 1, rgb: [data[i], data[i + 1], data[i + 2]] });
+  };
+  for (let x = 0; x < w; x += 1) {
+    sample(x, 0);
+    sample(x, h - 1);
+  }
+  for (let y = 0; y < h; y += 1) {
+    sample(0, y);
+    sample(w - 1, y);
+  }
+  const border = 2 * (w + h);
+  return [...freq.values()]
+    .sort((a, b) => b.n - a.n)
+    .filter((e, i) => i === 0 || e.n / border > 0.05) // 테두리의 5% 이상 차지하는 색만
+    .slice(0, 3)
+    .map((e) => e.rgb);
+}
+
+/** 배경 색들 중 가장 가까운 것과의 거리 */
+function bgDistance(data, i, colors) {
+  let best = Infinity;
+  let bestColor = colors[0];
+  for (const c of colors) {
+    const d = dist(data[i], data[i + 1], data[i + 2], c[0], c[1], c[2]);
+    if (d < best) {
+      best = d;
+      bestColor = c;
+    }
+  }
+  return { d: best, color: bestColor };
+}
+
 /** 테두리에서 시작해 배경색과 이어진 영역만 투명하게 만든다. */
 function removeSheetBackground(png) {
   const { width: w, height: h, data } = png;
-  const [br, bgc, bb] = [data[0], data[1], data[2]];
+  const bgColors = detectBackgroundColors(png);
   const visited = new Uint8Array(w * h);
   const stack = [];
 
@@ -139,7 +188,7 @@ function removeSheetBackground(png) {
     const p = y * w + x;
     if (visited[p]) return;
     const i = p * 4;
-    if (dist(data[i], data[i + 1], data[i + 2], br, bgc, bb) >= BG_T_OPAQUE) return;
+    if (bgDistance(data, i, bgColors).d >= BG_T_OPAQUE) return;
     visited[p] = 1;
     stack.push(p);
   };
@@ -156,7 +205,7 @@ function removeSheetBackground(png) {
   while (stack.length > 0) {
     const p = stack.pop();
     const i = p * 4;
-    const d = dist(data[i], data[i + 1], data[i + 2], br, bgc, bb);
+    const { d, color } = bgDistance(data, i, bgColors);
     const a =
       d <= BG_T_TRANSPARENT
         ? 0
@@ -164,7 +213,7 @@ function removeSheetBackground(png) {
     // 아주 옅게 남는 픽셀은 흰 테두리처럼 보이므로 아예 지운다
     const finalA = a < 24 ? 0 : a;
     data[i + 3] = finalA;
-    unpremultiply(data, i, finalA, [br, bgc, bb]);
+    unpremultiply(data, i, finalA, color);
 
     const x = p % w;
     const y = (p - x) / w;

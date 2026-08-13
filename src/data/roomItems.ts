@@ -86,6 +86,14 @@ export const ROOM_ITEMS: readonly RoomItem[] = [
   },
 ] as const;
 
+/**
+ * 상점 진열 순서 — 필요 레벨이 낮은 것부터.
+ * 방 안에서의 겹침 순서(layer)와는 무관하다.
+ */
+export const SHOP_ORDER: readonly RoomItem[] = [...ROOM_ITEMS].sort(
+  (a, b) => a.requiredLevel - b.requiredLevel || a.name.localeCompare(b.name, 'ko'),
+);
+
 export const findRoomItem = (id: string): RoomItem | undefined =>
   ROOM_ITEMS.find((i) => i.id === id);
 
