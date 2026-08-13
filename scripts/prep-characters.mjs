@@ -48,6 +48,24 @@ function detectBackground(png) {
   });
 }
 
+
+/**
+ * 배경 위에 합성된 결과에서 원래 색을 되돌린다.
+ *
+ *   관측색 = a·원본색 + (1-a)·배경색   →   원본색 = (관측색 - (1-a)·배경색) / a
+ *
+ * 알파만 깎고 색을 그대로 두면 가장자리에 배경색 테두리가 남는다.
+ * (흰 배경이면 흰 테두리, 크림 배경이면 크림 테두리)
+ */
+function unpremultiply(data, i, alpha, bg) {
+  if (alpha <= 0 || alpha >= 255) return;
+  const a = alpha / 255;
+  for (let c = 0; c < 3; c += 1) {
+    const v = (data[i + c] - (1 - a) * bg[c]) / a;
+    data[i + c] = Math.max(0, Math.min(255, Math.round(v)));
+  }
+}
+
 /**
  * 테두리에서 시작해 배경색과 가까운 픽셀만 따라 들어가며 알파를 깎는다.
  * 캐릭터 내부의 밝은 부분(하이라이트 등)은 테두리와 이어져 있지 않으므로 살아남는다.
@@ -87,6 +105,7 @@ function removeBackground(png, bg) {
     const alpha = d <= T_TRANSPARENT ? 0 : Math.round(((d - T_TRANSPARENT) / (T_OPAQUE - T_TRANSPARENT)) * 255);
     if (alpha < data[i + 3]) {
       data[i + 3] = alpha;
+      unpremultiply(data, i, alpha, [br, bg_, bb]);
       cleared += 1;
     }
 

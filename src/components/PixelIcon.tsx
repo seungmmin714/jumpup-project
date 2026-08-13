@@ -17,7 +17,20 @@ export type IconName =
   | 'link'
   | 'lock'
   | 'sprout'
-  | 'watering-can';
+  | 'watering-can'
+  // 효과 시트
+  | 'fan'
+  | 'wind'
+  | 'bulb-bright'
+  | 'splash'
+  | 'fire'
+  | 'snow'
+  | 'zzz'
+  | 'question'
+  | 'face-happy'
+  | 'face-sad'
+  | 'berry'
+  | 'link-green';
 
 export type ShopItemIcon =
   | 'shelf'

@@ -61,17 +61,36 @@
     @apply tap inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-base font-bold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
   }
 
+  /*
+   * 도트 버튼은 9-슬라이스로 늘린다.
+   * 원본 644×185에서 모서리 사면+테두리가 약 34px이라 그만큼을 잘라
+   * 17px로 그린다(2:1 정수 축소라 도트가 뭉개지지 않는다).
+   * 테두리가 안쪽 여백 역할을 하므로 padding은 좌우만 준다.
+   */
+  .btn-pixel {
+    @apply tap inline-flex items-center justify-center gap-2 text-base font-bold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40;
+    border-style: solid;
+    border-width: 17px;
+    border-image-slice: 34 fill;
+    border-image-width: 17px;
+    border-image-repeat: stretch;
+    background: transparent;
+    box-shadow: none;
+    padding: 0 6px;
+    min-height: 56px;
+  }
+
   .btn-primary {
-    background: var(--primary);
+    @apply btn-pixel;
+    border-image-source: url('/sprites/btn-primary.png');
     color: #fff;
-    @apply btn;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
   }
 
   .btn-secondary {
-    background: var(--card);
+    @apply btn-pixel;
+    border-image-source: url('/sprites/btn-secondary.png');
     color: var(--text);
-    box-shadow: var(--card-shadow);
-    @apply btn;
   }
 
   .btn-ghost {

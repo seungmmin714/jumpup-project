@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { moodInfo } from '@/lib/mood';
-import { PixelIcon } from '@/components/PixelIcon';
+import { PixelIcon, type IconName } from '@/components/PixelIcon';
 import type { Mood, Plant } from '@/ble/types';
 
 interface MoodStyle {
@@ -14,7 +14,7 @@ interface MoodStyle {
   filter: string;
   animation: string;
   /** 캐릭터 주위에 떠다니는 아이콘 */
-  particles: string[];
+  particles: IconName[];
   /** 씬 배경 그라데이션 */
   scene: string;
 }
@@ -23,43 +23,43 @@ const MOOD_STYLE: Record<Mood, MoodStyle> = {
   0: {
     filter: 'saturate(1.05)',
     animation: 'animate-bob',
-    particles: ['✨', '🌿'],
+    particles: [],
     scene: 'from-[#dfe9c8] via-[#f0e7cf] to-[#e4d3b0]',
   },
   1: {
     filter: 'saturate(0.6) brightness(0.97)',
     animation: 'animate-droop',
-    particles: ['💧'],
+    particles: ['drop'],
     scene: 'from-[#f3e3c4] via-[#f2e6cd] to-[#e4d3b0]',
   },
   2: {
     filter: 'saturate(1.15) hue-rotate(-12deg) brightness(1.05)',
     animation: 'animate-shiver',
-    particles: ['💦', '🔥'],
+    particles: ['fire'],
     scene: 'from-[#f7dcc8] via-[#f4e4cd] to-[#e4d3b0]',
   },
   3: {
     filter: 'saturate(0.85) hue-rotate(15deg) brightness(0.98)',
     animation: 'animate-shiver',
-    particles: ['❄️'],
+    particles: ['snow'],
     scene: 'from-[#d8e6f0] via-[#eee9d8] to-[#e4d3b0]',
   },
   4: {
     filter: 'brightness(0.72) saturate(0.8)',
     animation: 'animate-sleep',
-    particles: ['💤'],
+    particles: ['zzz'],
     scene: 'from-[#c8cbe0] via-[#e2ddd6] to-[#ddcdae]',
   },
   5: {
     filter: 'saturate(0.9) hue-rotate(12deg) brightness(0.96)',
     animation: 'animate-sway',
-    particles: ['💧', '💧'],
+    particles: ['splash'],
     scene: 'from-[#d3e4f2] via-[#eae9d9] to-[#e4d3b0]',
   },
   6: {
     filter: 'grayscale(0.8) brightness(0.95)',
     animation: 'animate-glitch',
-    particles: ['❓'],
+    particles: ['question'],
     scene: 'from-[#dedcd6] via-[#e9e6dd] to-[#e0d5c0]',
   },
 };
@@ -120,19 +120,25 @@ export function PlantCharacter({
           alt={`${plant.nameKo} 캐릭터: ${info.name}`}
           className={`pixelated h-full w-full object-contain object-bottom transition-[filter] duration-700 ${
             celebrating ? 'animate-pop-in' : style.animation
-          } ${stale ? 'opacity-60' : ''}`}
-          style={{ filter: celebrating ? 'saturate(1.2) brightness(1.05)' : style.filter }}
+          }`}
+          style={{
+            // 실시간이 아닐 때는 투명하게 하지 않는다 — 방 배경이 비쳐 캐릭터가 유령처럼 보인다.
+            // 채도만 살짝 낮추고, 실시간 여부는 이름표의 "마지막 기분"으로 알린다.
+            filter: celebrating
+              ? 'saturate(1.2) brightness(1.05)'
+              : `${style.filter}${stale ? ' saturate(0.75)' : ''}`,
+          }}
           onError={() => setFailed(true)}
           draggable={false}
         />
       )}
 
-      {!stale ? <Particles icons={celebrating ? ['✨', '🎉', '✨'] : style.particles} /> : null}
+      {!stale ? <Particles icons={celebrating ? ['face-happy'] : style.particles} /> : null}
     </div>
   );
 }
 
-function Particles({ icons }: { icons: string[] }) {
+function Particles({ icons }: { icons: IconName[] }) {
   if (icons.length === 0) return null;
   return (
     <div className="pointer-events-none absolute inset-0 overflow-visible" aria-hidden>
@@ -146,8 +152,7 @@ function Particles({ icons }: { icons: string[] }) {
             animationDelay: `${i * 700}ms`,
           }}
         >
-          {/* 물방울은 도트 아이콘이 있으므로 그걸 쓴다 */}
-          {icon === '💧' ? <PixelIcon name="drop" size={18} /> : icon}
+          <PixelIcon name={icon} size={22} />
         </span>
       ))}
     </div>

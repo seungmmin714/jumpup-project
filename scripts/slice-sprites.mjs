@@ -35,6 +35,46 @@ const SHEETS = [
     ],
   },
   {
+    file: 'effects.png',
+    cols: 4,
+    rows: 3,
+    size: 128,
+    names: [
+      'fan', 'wind', 'bulb-bright', 'splash',
+      'fire', 'snow', 'zzz', 'question',
+      'face-happy', 'face-sad', 'berry', 'link-green',
+    ],
+  },
+  {
+    // 버튼·바는 가로로 길다. 정사각으로 채우면 9-슬라이스가 깨진다.
+    file: 'buttons.png',
+    cols: 2,
+    rows: 4,
+    size: 96,
+    square: false,
+    // 버튼은 가로로 길고 옅은 그림자를 달고 있어 격자·투영 방식이 전부 어긋났다.
+    // 연결 요소로 실제 위치를 측정해 좌표를 박아 뒀다(scripts 주석 참고).
+    // 9-슬라이스로 늘려 쓰므로 축소하지 않는다 — size 0.
+    size: 0,
+    square: false,
+    rects: {
+      'btn-primary': [88, 69, 644, 185],
+      'btn-secondary': [838, 69, 629, 185],
+      'bar-soil': [81, 365, 645, 99],
+      'bar-slider': [802, 372, 669, 104],
+      'bar-progress': [83, 595, 644, 94],
+      'bar-empty': [812, 595, 651, 94],
+      'btn-inventory': [215, 775, 398, 158],
+      'btn-event': [886, 767, 446, 166],
+    },
+    names: [
+      'btn-primary', 'btn-secondary',
+      'bar-soil', 'bar-slider',
+      'bar-progress', 'bar-empty',
+      'btn-inventory', 'btn-event',
+    ],
+  },
+  {
     file: 'shop-items.png',
     cols: 4,
     rows: 2,
@@ -62,6 +102,24 @@ const BG_T_OPAQUE = 34;
 
 const dist = (r1, g1, b1, r2, g2, b2) =>
   Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
+
+
+/**
+ * 배경 위에 합성된 결과에서 원래 색을 되돌린다.
+ *
+ *   관측색 = a·원본색 + (1-a)·배경색   →   원본색 = (관측색 - (1-a)·배경색) / a
+ *
+ * 알파만 깎고 색을 그대로 두면 가장자리에 배경색 테두리가 남는다.
+ * (흰 배경이면 흰 테두리, 크림 배경이면 크림 테두리)
+ */
+function unpremultiply(data, i, alpha, bg) {
+  if (alpha <= 0 || alpha >= 255) return;
+  const a = alpha / 255;
+  for (let c = 0; c < 3; c += 1) {
+    const v = (data[i + c] - (1 - a) * bg[c]) / a;
+    data[i + c] = Math.max(0, Math.min(255, Math.round(v)));
+  }
+}
 
 /** 테두리에서 시작해 배경색과 이어진 영역만 투명하게 만든다. */
 function removeSheetBackground(png) {
@@ -98,7 +156,9 @@ function removeSheetBackground(png) {
         ? 0
         : Math.round(((d - BG_T_TRANSPARENT) / (BG_T_OPAQUE - BG_T_TRANSPARENT)) * 255);
     // 아주 옅게 남는 픽셀은 흰 테두리처럼 보이므로 아예 지운다
-    data[i + 3] = a < 24 ? 0 : a;
+    const finalA = a < 24 ? 0 : a;
+    data[i + 3] = finalA;
+    unpremultiply(data, i, finalA, [br, bgc, bb]);
 
     const x = p % w;
     const y = (p - x) / w;
@@ -114,14 +174,15 @@ function removeSheetBackground(png) {
  * 시트가 정확한 격자로 배치돼 있지 않아 고정 분할로 자르면 옆 아이콘이 걸쳐 들어온다.
  * 내용이 있는 행/열이 이어지는 구간을 밴드로 보고, 그 교차점을 셀로 쓴다.
  */
-function bands(png, axis) {
+function bands(png, axis, from = 0, to = Infinity) {
   const { width: w, height: h, data } = png;
   const n = axis === 'x' ? w : h;
-  const m = axis === 'x' ? h : w;
+  const lo = Math.max(0, from);
+  const hi = Math.min((axis === 'x' ? h : w) - 1, to);
   const filled = new Uint8Array(n);
 
   for (let i = 0; i < n; i += 1) {
-    for (let j = 0; j < m; j += 1) {
+    for (let j = lo; j <= hi; j += 1) {
       const x = axis === 'x' ? i : j;
       const y = axis === 'x' ? j : i;
       if (data[(y * w + x) * 4 + 3] > ALPHA_MIN) {
@@ -167,7 +228,7 @@ function mergeTo(list, expected) {
   return out;
 }
 
-function cellBounds(png, x0, y0, w, h) {
+function cellBounds(png, x0, y0, w, h, minAlpha = ALPHA_MIN) {
   let minX = w;
   let minY = h;
   let maxX = -1;
@@ -175,7 +236,7 @@ function cellBounds(png, x0, y0, w, h) {
   for (let y = 0; y < h; y += 1) {
     for (let x = 0; x < w; x += 1) {
       const a = png.data[((y0 + y) * png.width + (x0 + x)) * 4 + 3];
-      if (a > ALPHA_MIN) {
+      if (a > minAlpha) {
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
         if (y < minY) minY = y;
@@ -184,6 +245,21 @@ function cellBounds(png, x0, y0, w, h) {
     }
   }
   return maxX < 0 ? null : { minX, minY, maxX, maxY };
+}
+
+/** 잘라낸 내용을 그대로 옮긴다 (정사각 정렬 없음) */
+function toRect(png, x0, y0, b) {
+  const w = b.maxX - b.minX + 1;
+  const h = b.maxY - b.minY + 1;
+  const out = new PNG({ width: w, height: h, fill: true });
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const si = ((y0 + b.minY + y) * png.width + (x0 + b.minX + x)) * 4;
+      const di = (y * w + x) * 4;
+      for (let c = 0; c < 4; c += 1) out.data[di + c] = png.data[si + c];
+    }
+  }
+  return out;
 }
 
 /** 잘라낸 내용을 정사각 캔버스 가운데에 놓는다 */
@@ -225,10 +301,10 @@ for (const sheet of SHEETS) {
   const png = PNG.sync.read(readFileSync(src));
   removeSheetBackground(png);
 
-  const xs = mergeTo(bands(png, 'x'), sheet.cols);
-  const ys = mergeTo(bands(png, 'y'), sheet.rows);
-  const grid = xs.length === sheet.cols && ys.length === sheet.rows;
-  if (!grid) {
+  const xs = sheet.evenGrid ? [] : mergeTo(bands(png, 'x'), sheet.cols);
+  const ys = sheet.evenGrid ? [] : mergeTo(bands(png, 'y'), sheet.rows);
+  const grid = !sheet.evenGrid && xs.length === sheet.cols && ys.length === sheet.rows;
+  if (!grid && !sheet.evenGrid) {
     console.warn(
       `⚠️  ${sheet.file}: 밴드 ${xs.length}×${ys.length} (기대 ${sheet.cols}×${sheet.rows}) — 균등 분할로 대체`,
     );
@@ -243,21 +319,32 @@ for (const sheet of SHEETS) {
       n += 1;
       if (!name) continue;
 
-      const x0 = grid ? xs[c][0] : c * fw;
-      const y0 = grid ? ys[r][0] : r * fh;
-      const cw = grid ? xs[c][1] - xs[c][0] + 1 : fw;
-      const ch = grid ? ys[r][1] - ys[r][0] + 1 : fh;
+      const rect = sheet.rects?.[name];
+      const x0 = rect ? rect[0] : grid ? xs[c][0] : c * fw;
+      const y0 = rect ? rect[1] : grid ? ys[r][0] : r * fh;
+      const cw = rect ? rect[2] : grid ? xs[c][1] - xs[c][0] + 1 : fw;
+      const ch = rect ? rect[3] : grid ? ys[r][1] - ys[r][0] + 1 : fh;
 
-      const b = cellBounds(png, x0, y0, cw, ch);
+      // 좌표를 직접 준 경우엔 그대로 잘라낸다
+      const b = rect
+        ? { minX: 0, minY: 0, maxX: cw - 1, maxY: ch - 1 }
+        : cellBounds(png, x0, y0, cw, ch, sheet.trimAlpha ?? ALPHA_MIN);
       if (!b) {
         console.warn(`⚠️  빈 칸: ${sheet.file} [${r},${c}]`);
         continue;
       }
-      const out = toSquare(png, x0, y0, b);
+      const keepRect = sheet.square === false;
+      const out = keepRect ? toRect(png, x0, y0, b) : toSquare(png, x0, y0, b);
       const outPath = path.join(OUT_DIR, `${sheet.prefix ?? ''}${name}.png`);
       writeFileSync(outPath, PNG.sync.write(out));
-      if (out.width > sheet.size) shrink(outPath, sheet.size);
-      console.log(`✅ ${path.basename(outPath).padEnd(22)} ${out.width}px → ${sheet.size}px`);
+      // 사각형은 높이 기준, 정사각은 한 변 기준으로 줄인다
+      const measure = keepRect ? out.height : out.width;
+      if (sheet.size > 0 && measure > sheet.size) {
+        shrink(outPath, Math.round((out.width / measure) * sheet.size));
+      }
+      console.log(
+        `✅ ${path.basename(outPath).padEnd(22)} ${out.width}×${out.height} → ${sheet.size}px`,
+      );
     }
   }
 }

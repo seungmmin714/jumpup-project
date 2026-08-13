@@ -18,9 +18,19 @@ interface Props {
   celebrating: boolean;
   speech: string;
   caption: string;
+  /** 급수가 감지되는 동안엔 기분 색 덮개 대신 물빛으로 */
+  watering?: boolean;
 }
 
-export function PlantScene({ plant, mood, stale, celebrating, speech, caption }: Props) {
+export function PlantScene({
+  plant,
+  mood,
+  stale,
+  celebrating,
+  speech,
+  caption,
+  watering = false,
+}: Props) {
   return (
     <section className="relative aspect-[4/3] w-full overflow-hidden rounded-card shadow-card">
       <img
@@ -32,7 +42,7 @@ export function PlantScene({ plant, mood, stale, celebrating, speech, caption }:
       />
 
       {/* 기분에 따라 방 분위기를 살짝 덮는다 */}
-      <div className={`absolute inset-0 ${MOOD_WASH[mood]}`} aria-hidden />
+      <div className={`absolute inset-0 ${watering ? 'bg-wet/20' : MOOD_WASH[mood]}`} aria-hidden />
 
       {/* 말풍선 */}
       <div className="absolute inset-x-0 top-3 flex justify-center px-4">

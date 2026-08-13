@@ -5,6 +5,7 @@ import { cmdFan } from '@/ble/constants';
 import { sendCommand } from '@/store/bleBridge';
 import { canControl, useConnectionStore } from '@/store/connectionStore';
 import { mmss } from '@/lib/format';
+import { PixelIcon } from '@/components/PixelIcon';
 
 const OVERRIDE_MS = 10 * 60_000;
 const DEBOUNCE_MS = 300;
@@ -54,7 +55,10 @@ export function FanToggle() {
     <div className="rounded-xl bg-primary-soft/50 px-3 py-2.5">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-ink">🌬 환기팬 강제 가동</p>
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+            <PixelIcon name="fan" size={18} />
+            환기팬 강제 가동
+          </p>
           <p className="text-[11px] text-ink-sub">
             {on
               ? `${mmss(remaining)} 뒤 자동 제어로 돌아가요`

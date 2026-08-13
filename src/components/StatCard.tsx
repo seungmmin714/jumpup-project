@@ -54,7 +54,7 @@ export function PillButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="tap relative flex items-center justify-center gap-2 rounded-card bg-card px-4 py-3 text-sm font-bold text-ink shadow-card transition active:scale-[0.98] disabled:opacity-50"
+      className="btn-secondary relative w-full text-sm"
     >
       <PixelIcon name={icon} size={22} />
       {label}

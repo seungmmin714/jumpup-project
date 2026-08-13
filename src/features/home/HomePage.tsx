@@ -5,7 +5,6 @@
 // 그 밖의 §9.2 요구 항목(솔루션 카드·LED·인벤토리/이벤트)은 이 골격을 깨지 않는 자리에 둔다.
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ConnectionBadge, ConnectionBanners } from '@/components/ConnectionBadge';
 import { Banner, Card, ProgressBar } from '@/components/ui';
 import { PillButton, StatChip } from '@/components/StatCard';
@@ -19,10 +18,11 @@ import { PotPicker } from './PotPicker';
 import { BleModeCard } from './BleModeCard';
 import { useOfflineLatest } from '@/lib/useOfflineLatest';
 import { allSensorsMissing, isFieldWarned, useTelemetryStore } from '@/store/telemetryStore';
-import { isLive, isProtoOk, useConnectionStore } from '@/store/connectionStore';
+import { isLive, useConnectionStore } from '@/store/connectionStore';
 import { selectedPlant, usePotStore } from '@/store/potStore';
 import { STAGE_BY_LEVEL, useCharacterStore } from '@/store/characterStore';
 import { moodInfo } from '@/lib/mood';
+import { useWateringDetector, wateringSpeech } from '@/lib/useWateringDetector';
 import { timeAgo } from '@/lib/format';
 import {
   HUMIDITY_BAND_LABEL,
@@ -34,7 +34,6 @@ import {
 } from '@/lib/convert';
 
 export default function HomePage() {
-  const navigate = useNavigate();
   const [ledBoost, setLedBoost] = useState(0);
 
   // 셀렉터는 필드 단위로 — 객체를 새로 만들면 매 업데이트마다 리렌더된다.
@@ -43,12 +42,13 @@ export default function HomePage() {
   const source = useTelemetryStore((s) => s.source);
   const conn = useConnectionStore();
   const live = isLive(conn);
-  const protoOk = isProtoOk(conn);
   const plant = usePotStore(selectedPlant);
   const pots = usePotStore((s) => s.pots);
   const character = useCharacterStore();
 
   useOfflineLatest();
+  // 물 주기 버튼 대신, 토양 센서가 급수를 알아채면 캐릭터가 실시간으로 반응한다
+  const watering = useWateringDetector();
 
   const mood = latest?.mood ?? 0;
   const info = moodInfo(mood);
@@ -119,8 +119,9 @@ export default function HomePage() {
         mood={mood}
         stale={stale}
         celebrating={character.celebrating}
-        speech={info.speech}
+        speech={wateringSpeech(watering.phase, watering.gainedPct) ?? info.speech}
         caption={stale ? '마지막 기분' : `Lv.${character.level}`}
+        watering={watering.phase !== 'idle'}
       />
 
       {/* 솔루션 카드 — 문제가 있을 때만, 캐릭터 바로 아래에 붙는다 */}
@@ -133,17 +134,18 @@ export default function HomePage() {
           토양 수분 상태
         </p>
         <SoilGauge soilRaw={latest?.soilRaw ?? null} profile={plant} />
-      </Card>
 
-      <button
-        type="button"
-        className={`btn-primary w-full py-4 text-lg ${mood === 1 ? 'animate-pop-in' : ''}`}
-        onClick={() => navigate('/water')}
-        disabled={!protoOk}
-      >
-        <PixelIcon name="drop" size={22} /> 물 주기
-        {mood === 1 ? <span className="text-xs font-normal opacity-90">지금 필요해요!</span> : null}
-      </button>
+        {watering.phase !== 'idle' ? (
+          <p className="mt-3 flex items-center justify-center gap-1.5 rounded-2xl bg-primary-soft py-2 text-xs font-bold text-primary">
+            <PixelIcon name="splash" size={18} />
+            물을 주고 있어요 · +{watering.gainedPct.toFixed(0)}%
+          </p>
+        ) : mood === 1 ? (
+          <p className="mt-3 text-center text-xs font-semibold text-ink-sub">
+            흙이 말랐어요. 화분에 물을 부으면 그로미가 바로 반응해요.
+          </p>
+        ) : null}
+      </Card>
 
       {/* ⑥ 건강도 · 성장 단계 */}
       <Card>
