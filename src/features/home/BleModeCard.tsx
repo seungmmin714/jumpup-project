@@ -12,6 +12,7 @@ import {
   type DiagnosticLevel,
 } from '@/ble';
 import { Card } from '@/components/ui';
+import type { BleMode } from '@/ble';
 
 const ICON: Record<DiagnosticLevel, string> = { ok: '✅', warn: '⚠️', blocked: '⛔' };
 
@@ -21,7 +22,7 @@ export function BleModeCard() {
   const items = bleDiagnostics(mode);
   const blocked = items.filter((d) => d.level === 'blocked' && d.key !== 'platform');
 
-  const switchTo = (next: 'mock' | 'real') => {
+  const switchTo = (next: BleMode) => {
     setBleMode(next);
     // 클라이언트는 모듈 로드 때 한 번 만들어지므로 새로고침으로 갈아끼운다.
     window.location.reload();
@@ -32,26 +33,36 @@ export function BleModeCard() {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-bold text-ink">
-            {mode === 'mock' ? '🧪 시뮬레이터 모드' : '📡 실기기 모드'}
+            {mode === 'mock' ? '🧪 시뮬레이터' : mode === 'serial' ? '🔌 USB 시리얼' : '📡 블루투스'}
           </p>
           <p className="mt-0.5 text-xs leading-relaxed text-ink-sub">
             {mode === 'mock'
               ? '화분 없이 가짜 센서값으로 돌고 있어요. 진짜 화분에 붙이려면 전환하세요.'
               : blocked.length > 0
-                ? '지금 환경에서는 블루투스를 쓸 수 없어요. 아래를 확인해 주세요.'
-                : '실제 GROWME 화분을 찾습니다. 화분 전원을 켜고 연결하기를 눌러주세요.'}
+                ? '지금 환경에서는 연결할 수 없어요. 아래를 확인해 주세요.'
+                : mode === 'serial'
+                  ? 'USB로 연결한 아두이노를 찾습니다. PC 크롬에서 연결하기를 눌러주세요.'
+                  : '실제 GROWME 화분을 찾습니다. 화분 전원을 켜고 연결하기를 눌러주세요.'}
           </p>
         </div>
-        <button
-          type="button"
-          className="tap shrink-0 rounded-lg bg-primary-soft px-3 py-2 text-xs font-bold text-ink"
-          onClick={() => switchTo(mode === 'mock' ? 'real' : 'mock')}
-        >
-          {mode === 'mock' ? '실기기로' : '시뮬로'}
-        </button>
+        {/* S-02 세 모드를 직접 고른다 */}
+        <div className="flex shrink-0 gap-1">
+          {(['mock', 'serial', 'ble'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              className={`tap rounded-lg px-2 py-2 text-[11px] font-bold ${
+                mode === m ? 'bg-primary text-white' : 'bg-primary-soft text-ink'
+              }`}
+              onClick={() => switchTo(m)}
+            >
+              {m === 'mock' ? '시뮬' : m === 'serial' ? 'USB' : 'BLE'}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {mode === 'real' && blocked.length > 0 ? (
+      {mode !== 'mock' && blocked.length > 0 ? (
         <div className="mt-3 space-y-2">
           {blocked.map((d) => (
             <div key={d.key} className="rounded-xl bg-danger/10 px-3 py-2 ring-1 ring-danger/25">

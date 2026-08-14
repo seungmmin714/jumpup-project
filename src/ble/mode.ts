@@ -3,16 +3,19 @@
 // 우선순위: URL 쿼리(?ble=real|mock) > 저장된 설정 > 빌드 환경변수(VITE_BLE_MODE)
 // 빌드를 다시 하지 않고도 실기기로 넘어갈 수 있어야 현장에서 확인이 가능하다.
 
-export type BleMode = 'mock' | 'real';
+export type BleMode = 'mock' | 'serial' | 'ble';
 
 const STORAGE_KEY = 'growme.bleMode';
 
-const ENV_MODE: BleMode = (import.meta.env.VITE_BLE_MODE ?? 'mock') === 'real' ? 'real' : 'mock';
+const asMode = (v: string | undefined): BleMode | null =>
+  v === 'mock' || v === 'serial' || v === 'ble' ? v : v === 'real' ? 'ble' : null;
+
+/** 미지정이면 ble (WEB-PRD 기준 경로) */
+const ENV_MODE: BleMode = asMode(import.meta.env.VITE_BLE_MODE) ?? 'ble';
 
 const readStored = (): BleMode | null => {
   try {
-    const v = localStorage.getItem(STORAGE_KEY);
-    return v === 'real' || v === 'mock' ? v : null;
+    return asMode(localStorage.getItem(STORAGE_KEY) ?? undefined);
   } catch {
     return null; // 사파리 프라이빗 모드 등
   }
@@ -20,8 +23,7 @@ const readStored = (): BleMode | null => {
 
 const readQuery = (): BleMode | null => {
   if (typeof window === 'undefined') return null;
-  const v = new URLSearchParams(window.location.search).get('ble');
-  return v === 'real' || v === 'mock' ? v : null;
+  return asMode(new URLSearchParams(window.location.search).get('ble') ?? undefined);
 };
 
 /** 이번 실행에서 사용할 모드 */
@@ -92,14 +94,21 @@ export function bleDiagnostics(mode: BleMode): DiagnosticItem[] {
   const isAndroid = /Android/.test(ua);
   const isChromium = /Chrome|Chromium|Edg/.test(ua) && !/OPR|SamsungBrowser/.test(ua);
 
+  const MODE_TITLE: Record<BleMode, string> = {
+    mock: '시뮬레이터 모드',
+    serial: 'USB 시리얼 모드',
+    ble: '블루투스 모드',
+  };
   items.push({
     key: 'mode',
-    level: mode === 'real' ? 'ok' : 'warn',
-    title: mode === 'real' ? '실기기 모드' : '시뮬레이터 모드',
+    level: mode === 'mock' ? 'warn' : 'ok',
+    title: MODE_TITLE[mode],
     detail:
-      mode === 'real'
-        ? '실제 GROWME 화분을 찾습니다.'
-        : '가짜 센서값으로 동작 중이에요. 실기기에 붙이려면 모드를 바꿔주세요.',
+      mode === 'mock'
+        ? '가짜 센서값으로 동작 중이에요. 실기기에 붙이려면 모드를 바꿔주세요.'
+        : mode === 'serial'
+          ? 'USB로 연결한 아두이노를 찾습니다. PC 크롬에서만 됩니다.'
+          : '실제 GROWME 화분을 블루투스로 찾습니다.',
   });
 
   items.push({
@@ -113,15 +122,27 @@ export function bleDiagnostics(mode: BleMode): DiagnosticItem[] {
       : '휴대폰에서 http://로 접속하면 브라우저가 블루투스를 막아요. HTTPS로 열거나 USB 포트 포워딩을 쓰세요.',
   });
 
+  const hasSerial = typeof navigator !== 'undefined' && 'serial' in navigator;
+  const apiOk = mode === 'serial' ? hasSerial : hasApi;
   items.push({
     key: 'api',
-    level: hasApi ? 'ok' : 'blocked',
-    title: hasApi ? 'Web Bluetooth 사용 가능' : 'Web Bluetooth를 지원하지 않는 브라우저예요',
-    detail: hasApi
-      ? 'navigator.bluetooth가 있습니다.'
-      : isIos
-        ? 'iOS Safari·Chrome은 Web Bluetooth를 지원하지 않아요. 조회 전용으로만 쓸 수 있어요.'
-        : '안드로이드 Chrome 100 이상에서 열어주세요.',
+    level: apiOk ? 'ok' : 'blocked',
+    title: apiOk
+      ? mode === 'serial'
+        ? 'Web Serial 사용 가능'
+        : 'Web Bluetooth 사용 가능'
+      : mode === 'serial'
+        ? 'Web Serial을 지원하지 않는 브라우저예요'
+        : 'Web Bluetooth를 지원하지 않는 브라우저예요',
+    detail: apiOk
+      ? mode === 'serial'
+        ? 'navigator.serial이 있습니다.'
+        : 'navigator.bluetooth가 있습니다.'
+      : mode === 'serial'
+        ? 'PC 크롬에서 USB로 연결해 주세요. 모바일 크롬은 Web Serial을 지원하지 않아요.'
+        : isIos
+          ? 'iOS Safari·Chrome은 Web Bluetooth를 지원하지 않아요. 조회 전용으로만 쓸 수 있어요.'
+          : '안드로이드 Chrome 100 이상에서 열어주세요.',
   });
 
   items.push({

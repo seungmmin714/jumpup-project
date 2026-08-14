@@ -99,8 +99,10 @@ export type ConnectionState =
   | 'ERROR';
 
 export type ConnectionErrorKind =
-  | 'unsupported' // Web Bluetooth 미지원 (iOS 등)
-  | 'permission' // 사용자가 권한/선택 거부
-  | 'not-found' // 기기 없음
-  | 'gatt' // GATT 연결/서비스 실패
+  | 'unsupported' // Web Bluetooth / Web Serial 미지원
+  | 'permission' // 사용자가 권한·선택 거부
+  | 'not-found' // 기기 없음 (BLE)
+  | 'gatt' // GATT 연결/서비스 실패 (BLE)
+  | 'port-busy' // 다른 프로그램이 포트 점유 (Serial)
+  | 'port-open' // 포트 열기 실패 (Serial)
   | 'unknown';

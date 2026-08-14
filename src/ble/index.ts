@@ -3,12 +3,14 @@
 
 import { WebBleClient, isWebBluetoothSupported, type BleClient } from './BleClient';
 import { MockBleClient } from './MockBleClient';
+import { SerialClient, isWebSerialSupported } from './SerialClient';
 import { resolveBleMode, type BleMode } from './mode';
 
 export * from './types';
 export { isWebBluetoothSupported } from './BleClient';
 export type { BleClient } from './BleClient';
 export { MockBleClient } from './MockBleClient';
+export { SerialClient, isWebSerialSupported } from './SerialClient';
 export * from './mode';
 
 let instance: BleClient | null = null;
@@ -17,7 +19,12 @@ let activeMode: BleMode = 'mock';
 export function getBleClient(): BleClient {
   if (!instance) {
     activeMode = resolveBleMode();
-    instance = activeMode === 'mock' ? new MockBleClient() : new WebBleClient();
+    instance =
+      activeMode === 'mock'
+        ? new MockBleClient()
+        : activeMode === 'serial'
+          ? new SerialClient()
+          : new WebBleClient();
   }
   return instance;
 }
@@ -36,8 +43,15 @@ export function getMockClient(): MockBleClient | null {
   return c instanceof MockBleClient ? c : null;
 }
 
-/** iOS 등 미지원 환경 판별 (T-15) */
-export const canUseBle = (): boolean => isMockMode() || isWebBluetoothSupported();
+/** 지금 모드에서 연결을 시도할 수 있는가 (T-15 / S-03) */
+export const canUseBle = (): boolean => {
+  const mode = activeBleMode();
+  if (mode === 'mock') return true;
+  return mode === 'serial' ? isWebSerialSupported() : isWebBluetoothSupported();
+};
+
+/** Serial 모드는 USB가 뽑힌 상태라 자동 재시도가 무의미하다 (S-03) */
+export const supportsAutoReconnect = (): boolean => activeBleMode() === 'ble';
 
 export const isIosLike = (): boolean =>
   typeof navigator !== 'undefined' &&

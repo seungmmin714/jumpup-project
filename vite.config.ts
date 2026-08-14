@@ -25,6 +25,8 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    // 제품 기본값은 ble이다(S-02). 테스트는 하드웨어가 없으므로 mock을 명시한다.
+    env: { VITE_BLE_MODE: 'mock' },
     // 순수 로직은 node, 화면 테스트는 파일 상단의 @vitest-environment 주석으로 jsdom 전환
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'server/src/**/*.test.ts'],

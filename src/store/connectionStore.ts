@@ -122,7 +122,7 @@ export const BADGE: Record<ConnectionState, { label: string; tone: string; dot: 
 export const ERROR_MESSAGE: Record<ConnectionErrorKind, { title: string; hint: string }> = {
   unsupported: {
     title: '이 브라우저는 화분 연결을 지원하지 않아요',
-    hint: '안드로이드 Chrome에서 접속해 주세요. 지금은 마지막 상태만 볼 수 있어요.',
+    hint: '블루투스는 안드로이드 Chrome, USB는 PC 크롬에서 연결해 주세요.',
   },
   permission: {
     title: '블루투스 권한이 필요해요',
@@ -135,6 +135,14 @@ export const ERROR_MESSAGE: Record<ConnectionErrorKind, { title: string; hint: s
   gatt: {
     title: '연결에 실패했어요',
     hint: '화분 전원을 껐다 켠 뒤 다시 시도해 주세요.',
+  },
+  'port-busy': {
+    title: '포트를 사용할 수 없어요',
+    hint: '다른 프로그램이 포트를 사용 중입니다. 아두이노 IDE의 시리얼 모니터를 닫아주세요.',
+  },
+  'port-open': {
+    title: '포트를 열지 못했어요',
+    hint: 'USB 케이블을 다시 꽂고 시도해 주세요.',
   },
   unknown: {
     title: '알 수 없는 오류가 발생했어요',

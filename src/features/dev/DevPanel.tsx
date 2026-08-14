@@ -2,7 +2,7 @@
 // mood 7종 / 연결상태 7종 / 센서 결측을 강제 주입해 하드웨어 없이 전 화면을 검수한다.
 
 import { useEffect, useState } from 'react';
-import { activeBleMode, bleDiagnostics, getMockClient, isMockMode, setBleMode } from '@/ble';
+import { activeBleMode, bleDiagnostics, getMockClient, setBleMode } from '@/ble';
 import { MOOD_ORDER, moodInfo } from '@/lib/mood';
 import { useConnectionStore } from '@/store/connectionStore';
 import { useTelemetryStore } from '@/store/telemetryStore';
@@ -59,8 +59,9 @@ export function DevPanel() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-h-[75vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-neutral-900 p-4 text-xs text-neutral-200 shadow-2xl">
       <div className="mb-3 flex items-center justify-between">
+        {/* S-05 현재 통신 모드를 항상 보여준다 */}
         <span className="font-bold text-white">
-          개발자 패널 {isMockMode() ? '· MOCK' : '· REAL'}
+          개발자 패널 · {activeBleMode().toUpperCase()}
         </span>
         <button type="button" className="tap px-2 text-neutral-400" onClick={() => setOpen(false)}>
           닫기 ✕
@@ -91,7 +92,7 @@ export function DevPanel() {
 
       <Section title="BLE 모드 (새로고침됨)">
         <Row>
-          {(['mock', 'real'] as const).map((m) => (
+          {(['mock', 'serial', 'ble'] as const).map((m) => (
             <Btn
               key={m}
               active={activeBleMode() === m}
@@ -115,8 +116,8 @@ export function DevPanel() {
 
       {!mock ? (
         <p className="mt-3 rounded-lg bg-neutral-800 p-3 text-neutral-400">
-          실제 BLE 모드입니다. 강제 주입은 <code>VITE_BLE_MODE=mock</code> 또는{' '}
-          <code>?ble=mock</code>에서만 가능해요.
+          지금은 <b>{activeBleMode()}</b> 모드입니다. 강제 주입은{' '}
+          <code>VITE_BLE_MODE=mock</code> 또는 <code>?ble=mock</code>에서만 가능해요.
         </p>
       ) : (
         <>
