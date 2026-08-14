@@ -30,7 +30,25 @@ export type IconName =
   | 'face-happy'
   | 'face-sad'
   | 'berry'
-  | 'link-green';
+  | 'link-green'
+  // 행복도 5단계 표정
+  | 'happiness-0'
+  | 'happiness-1'
+  | 'happiness-2'
+  | 'happiness-3'
+  | 'happiness-4';
+
+/**
+ * 행복도(0~100%)에 맞는 표정을 고른다.
+ * 5단계를 20%씩 나눈다 — 0~19 울음 / 20~39 슬픔 / 40~59 보통 / 60~79 미소 / 80~100 활짝.
+ */
+export function happinessFace(happiness: number): IconName {
+  const clamped = Math.min(100, Math.max(0, happiness));
+  const step = Math.min(4, Math.floor(clamped / 20));
+  return `happiness-${step}` as IconName;
+}
+
+export const HAPPINESS_LABEL = ['많이 힘들어요', '지쳤어요', '그저 그래요', '기분 좋아요', '아주 행복해요'];
 
 export type ShopItemIcon =
   | 'shelf'

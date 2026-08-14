@@ -665,3 +665,23 @@ describe('구매 → 홈 반영 (ROOM_LAYOUT 위치)', () => {
     expect(document.querySelector('img[data-room-item="shelf"]')).toBeTruthy();
   });
 });
+
+describe('행복도 표정 (홈)', () => {
+  it('행복도에 맞는 도트 표정을 그린다', async () => {
+    await connectAndTick();
+    act(() => useCharacterStore.setState({ happiness: 85 }));
+    renderApp();
+
+    const face = screen.getByAltText('아주 행복해요') as HTMLImageElement;
+    expect(face.getAttribute('src')).toBe('/sprites/happiness-4.png');
+  });
+
+  it('행복도가 낮으면 표정이 바뀐다', async () => {
+    await connectAndTick();
+    act(() => useCharacterStore.setState({ happiness: 10 }));
+    renderApp();
+
+    const face = screen.getByAltText('많이 힘들어요') as HTMLImageElement;
+    expect(face.getAttribute('src')).toBe('/sprites/happiness-0.png');
+  });
+});

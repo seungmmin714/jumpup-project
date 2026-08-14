@@ -35,6 +35,15 @@ const SHEETS = [
     ],
   },
   {
+    // 행복도 5단계 표정 — 왼쪽(울음)에서 오른쪽(활짝)으로 갈수록 좋아진다.
+    // 이름의 숫자가 곧 단계라 코드에서 인덱스로 고른다.
+    file: 'happiness-faces.png',
+    cols: 5,
+    rows: 1,
+    size: 128,
+    names: ['happiness-0', 'happiness-1', 'happiness-2', 'happiness-3', 'happiness-4'],
+  },
+  {
     file: 'effects.png',
     cols: 4,
     rows: 3,

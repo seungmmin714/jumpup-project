@@ -9,6 +9,7 @@ npm run prep:sprites
 | 원본 | 격자 | 결과 |
 |---|---|---|
 | `icons.png` | 4×4 | `home` `journal` `catalog` `shop` / `drop` `sun` `drop-plus` `bulb` / `thermometer` `coin` `backpack` `gift` / `link` `lock` `sprout` `watering-can` |
+| `happiness-faces.png` | 5×1 | `happiness-0`(울음) ~ `happiness-4`(활짝) — 숫자가 곧 단계 |
 | `effects.png` | 4×3 | `fan` `wind` `bulb-bright` `splash` / `fire` `snow` `zzz` `question` / `face-happy` `face-sad` `berry` `link-green` |
 | `shop-items.png` | 4×2 | `item-shelf` `item-watering-can` `item-rug` `item-window` / `item-hanging-plant` `item-frame` `item-basket` `item-gift-box` |
 | `buttons.png` | 좌표 지정 | `btn-primary` `btn-secondary` `bar-empty` (나머지 칸은 만들지 않음) |

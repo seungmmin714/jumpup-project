@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { ConnectionBadge, ConnectionBanners } from '@/components/ConnectionBadge';
 import { Banner, Card, ProgressBar } from '@/components/ui';
 import { PillButton, StatChip } from '@/components/StatCard';
-import { PixelIcon } from '@/components/PixelIcon';
+import { HAPPINESS_LABEL, PixelIcon, happinessFace } from '@/components/PixelIcon';
 import { SoilGauge } from '@/components/SoilGauge';
 import { CelebrationOverlay } from '@/features/character/Character';
 import { RoomScene } from '@/features/room/RoomScene';
@@ -164,9 +164,11 @@ export default function HomePage() {
             </p>
           </div>
           <div className="shrink-0 text-center">
-            <span className="text-2xl" aria-hidden>
-              {character.happiness >= 70 ? '😊' : character.happiness >= 40 ? '🙂' : '😥'}
-            </span>
+            <PixelIcon
+              name={happinessFace(character.happiness)}
+              size={40}
+              alt={HAPPINESS_LABEL[Math.min(4, Math.floor(character.happiness / 20))]}
+            />
             <p className="text-[11px] font-bold text-ink-sub">행복도</p>
           </div>
         </div>
