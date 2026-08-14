@@ -21,7 +21,8 @@ export type RoomLayoutMap = Record<RoomLayoutKey, RoomLayoutItem>;
 
 interface Props {
   plant: Plant;
-  mood: Mood;
+  /** null = 데이터 없음 (F-03) */
+  mood: Mood | null;
   stale?: boolean;
   celebrating?: boolean;
   speech?: string;
@@ -102,7 +103,9 @@ export function RoomScene({
 
       {/* 기분에 따라 방 분위기를 덮는다 */}
       <div
-        className={`pointer-events-none absolute inset-0 ${watering ? 'bg-wet/20' : MOOD_WASH[mood]}`}
+        className={`pointer-events-none absolute inset-0 ${
+          watering ? 'bg-wet/20' : mood === null ? 'bg-neutral-500/20' : MOOD_WASH[mood]
+        }`}
         style={{ zIndex: ROOM_Z.rug + 1 }}
         aria-hidden
       />
@@ -128,7 +131,7 @@ export function RoomScene({
             zIndex: ROOM_Z.speech,
           }}
         >
-          <SpeechBubble text={speech} tone={mood === 0 ? 'default' : 'alert'} />
+          <SpeechBubble text={speech} tone={mood === 0 || mood === null ? 'default' : 'alert'} />
         </div>
       ) : null}
 

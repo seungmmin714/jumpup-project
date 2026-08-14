@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { canUseBle, isIosLike, isMockMode } from '@/ble';
+import { canUseBle, isIosLike } from '@/ble';
 import { SUPPORTED_PROTO_VER } from '@/ble/constants';
 import { BADGE, ERROR_MESSAGE, isLive, isProtoOk, useConnectionStore } from '@/store/connectionStore';
 import { connectPot, disconnectPot } from '@/store/bleBridge';
@@ -42,9 +42,8 @@ export function ConnectionBadge() {
       >
         <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${badge.dot}`} aria-hidden />
         {badge.label}
-        <span className="truncate text-ink">
-          {conn.deviceName ?? (isMockMode() ? 'GROWME01' : '화분 미연결')}
-        </span>
+        {/* F-12d 실제로 연결된 기기가 있을 때만 이름을 보인다 */}
+        {conn.deviceName ? <span className="truncate text-ink">{conn.deviceName}</span> : null}
         {stamp ? <span className="shrink-0 text-ink-sub">· {stamp}</span> : null}
       </span>
 

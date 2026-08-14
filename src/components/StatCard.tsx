@@ -20,16 +20,20 @@ export function StatChip({
   return (
     <div className="flex min-w-0 items-center gap-1.5 rounded-card bg-card px-2.5 py-2 shadow-card">
       {icon}
+      {/*
+        F-11 §14 "숫자보다 상태 문구를 크게". 토양 게이지 카드의 위계에 맞춘다.
+        상태 문구가 주(主), 숫자는 보조다.
+      */}
       <div className="min-w-0">
         <p className={`truncate text-[13px] font-extrabold leading-tight ${tone ?? 'text-ink'}`}>
-          {value}
+          {caption}
           {warned ? (
             <span className="ml-0.5 text-warn" aria-label="센서 확인 필요" title="센서 확인 필요">
               ⚠
             </span>
           ) : null}
         </p>
-        <p className="truncate text-[10px] font-semibold text-ink-sub">{caption}</p>
+        <p className="truncate text-[10px] font-semibold text-ink-sub">{value}</p>
       </div>
     </div>
   );

@@ -165,6 +165,8 @@ describe('급수 가이드 (T-10)', () => {
 
   it('연결 후 진입하면 R:1을 보내고 1초 주기로 전환된다', async () => {
     const mock = await connectAndTick();
+    act(() => mock.setSoilRaw(800)); // F-02 건조 상태여야 바로 안내로 들어간다
+    await flush(6000);
     renderApp('/water');
 
     await flush(1000);
@@ -175,19 +177,37 @@ describe('급수 가이드 (T-10)', () => {
     expect(screen.getByText(/1초마다 측정하고 있어요/)).toBeTruthy();
   });
 
-  it('목표 구간에 들어오면 "그만! 딱 좋아요"와 햅틱이 발생한다', async () => {
+  it('F-01 물을 붓기 전에는 "그만" 문구가 뜨지 않는다', async () => {
+    const mock = await connectAndTick();
+    // 목표 구간 바로 아래에서 시작 — 절대 위치로 판정하면 곧바로 "그만!"이 뜬다
+    act(() => mock.setSoilRaw(700));
+    await flush(6000);
+    renderApp('/water');
+    await flush(200);
+
+    // 촉촉 확인 단계를 통과해도
+    fireEvent.click(screen.getByRole('button', { name: '그래도 줄래요' }));
+    await flush(200);
+    fireEvent.click(screen.getByRole('button', { name: /시작하기/ }));
+    await flush(6000);
+
+    expect(screen.queryByText(/그만! 딱 좋아요/)).toBeNull();
+    expect(screen.getByText('아직 반응이 없어요')).toBeTruthy();
+  });
+
+  it('F-01 baseline 대비 값이 내려간 뒤에만 "그만!"과 햅틱이 발생한다', async () => {
     const mock = await connectAndTick();
     const vibrate = vi.spyOn(navigator, 'vibrate');
-    renderApp('/water');
-
     act(() => mock.setSoilRaw(760)); // 건조 상태에서 시작
     await flush(6000);
+    renderApp('/water');
+    await flush(200);
+
     fireEvent.click(screen.getByRole('button', { name: /시작하기/ }));
-
     await flush(6000);
-    expect(screen.getByText(/천천히 부어주세요/)).toBeTruthy();
+    expect(screen.getByText('아직 반응이 없어요')).toBeTruthy();
 
-    // 목표 구간(708 > raw > 578)으로 이동
+    // 실제로 물을 부어 목표 구간(708 > raw > 578)까지 내린다 — 변화량 120 > 20
     act(() => mock.setSoilRaw(640));
     await flush(6000);
 
@@ -197,6 +217,8 @@ describe('급수 가이드 (T-10)', () => {
 
   it('과습이면 경고가 뜬다', async () => {
     const mock = await connectAndTick();
+    act(() => mock.setSoilRaw(800));
+    await flush(6000);
     renderApp('/water');
     await flush(1000);
     fireEvent.click(screen.getByRole('button', { name: /시작하기/ }));
@@ -206,8 +228,35 @@ describe('급수 가이드 (T-10)', () => {
     expect(screen.getByText(/너무 많아요!/)).toBeTruthy();
   });
 
+  it('F-02 흙이 이미 촉촉하면 확인 단계를 거친다', async () => {
+    const mock = await connectAndTick();
+    act(() => mock.setSoilRaw(640)); // 목표 구간(708~578) 안
+    await flush(6000);
+    renderApp('/water');
+    await flush(200);
+
+    expect(screen.getByText('지금은 흙이 촉촉해요')).toBeTruthy();
+    // 관성은 "안 주는 쪽"을 향한다
+    expect(screen.getByRole('button', { name: '돌아가기' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /시작하기/ })).toBeNull();
+  });
+
+  it('F-02 과습이면 진입이 차단되고 R:1을 보내지 않는다', async () => {
+    const mock = await connectAndTick();
+    act(() => mock.setSoilRaw(500)); // soilWet 이하
+    await flush(6000);
+    renderApp('/water');
+    await flush(1000);
+
+    expect(screen.getByText('흙이 이미 많이 젖어 있어요')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /시작하기/ })).toBeNull();
+    expect(mock.snapshot().fastSampling).toBe(false);
+  });
+
   it('화면을 벗어나면 R:0을 보낸다', async () => {
     const mock = await connectAndTick();
+    act(() => mock.setSoilRaw(800));
+    await flush(6000);
     const view = renderApp('/water');
     await flush(1000);
     fireEvent.click(screen.getByRole('button', { name: /시작하기/ }));
@@ -221,8 +270,9 @@ describe('급수 가이드 (T-10)', () => {
 
   it('3분이 지나면 측정이 종료된다', async () => {
     const mock = await connectAndTick();
-    renderApp('/water');
     act(() => mock.setSoilRaw(800));
+    await flush(6000);
+    renderApp('/water');
     await flush(1000);
     fireEvent.click(screen.getByRole('button', { name: /시작하기/ }));
 
@@ -365,7 +415,8 @@ describe('캐릭터·디자인', () => {
     });
     await flush(6000);
 
-    expect(screen.getByText('더워요')).toBeTruthy();
+    // F-04 상단 카드 문구는 mood에서 파생된다 (mood 2 → 너무 더워요)
+    expect(screen.getByText('너무 더워요')).toBeTruthy();
     // 게이지 축 라벨에도 '건조'가 있으므로 개수로 확인한다
     expect(screen.getAllByText('건조').length).toBeGreaterThan(0);
     expect(screen.getByText('물이 필요해요')).toBeTruthy();

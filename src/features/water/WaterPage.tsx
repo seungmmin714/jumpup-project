@@ -57,14 +57,22 @@ export default function WaterPage() {
       </Card>
 
       {g.phase === 'confirm-recent' ? <ConfirmRecent g={g} lastWateredAt={lastWateredAt} /> : null}
-      {g.phase === 'static' ? <StaticMode plantMl={plant.waterMl} /> : null}
+      {g.phase === 'confirm-moist' ? <ConfirmMoist g={g} /> : null}
+      {g.phase === 'blocked-wet' ? <BlockedWet onClose={close} /> : null}
+      {g.phase === 'static' ? (
+        <StaticMode
+          plantMl={plant.waterMl}
+          lastPct={latest?.soilMoisture ?? null}
+          measuredAt={latest?.measuredAt ?? null}
+        />
+      ) : null}
       {g.phase === 'intro' ? <Intro g={g} plantMl={plant.waterMl} /> : null}
       {g.phase === 'pour' ? <Pouring g={g} /> : null}
       {g.phase === 'soak' ? <Soaking g={g} /> : null}
       {g.phase === 'check' ? <Checking g={g} /> : null}
       {g.phase === 'done' ? <Done g={g} onClose={close} /> : null}
 
-      {g.phase !== 'done' && g.phase !== 'static' ? (
+      {g.phase !== 'done' && g.phase !== 'static' && g.phase !== 'blocked-wet' ? (
         <p className="mt-auto pb-2 text-center text-[11px] leading-relaxed text-ink-sub">
           💡 물이 스며들기까지 20~30초 걸려요.
           <br />
@@ -72,11 +80,6 @@ export default function WaterPage() {
         </p>
       ) : null}
 
-      {latest?.soilMoisture !== undefined && g.phase === 'static' ? (
-        <p className="text-center text-[11px] text-ink-sub">
-          마지막 측정 {fmtPct(latest?.soilMoisture ?? null)} · {timeAgo(latest?.measuredAt)}
-        </p>
-      ) : null}
     </div>
   );
 }
@@ -103,12 +106,58 @@ function ConfirmRecent({ g, lastWateredAt }: { g: G; lastWateredAt: string | nul
   );
 }
 
-/** §11.3 미연결 진입 — 실시간 게이지 없이 권장량과 마지막 값만 */
-function StaticMode({ plantMl }: { plantMl: number }) {
+/** F-02 흙이 이미 촉촉할 때 — 기본 강조는 "돌아가기" 쪽이다 */
+function ConfirmMoist({ g }: { g: G }) {
+  return (
+    <Card>
+      <p className="state-word">지금은 흙이 촉촉해요</p>
+      <p className="mt-1 text-sm text-ink-sub">
+        토양 수분이 이미 목표 구간에 있어요. 지금 물을 주면 과습이 될 수 있어요.
+      </p>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <button type="button" className="btn-primary" onClick={() => history.back()}>
+          돌아가기
+        </button>
+        <button type="button" className="btn-secondary" onClick={g.proceedAnyway}>
+          그래도 줄래요
+        </button>
+      </div>
+    </Card>
+  );
+}
+
+/** F-02 과습이면 아예 진입을 막는다 */
+function BlockedWet({ onClose }: { onClose: () => void }) {
+  return (
+    <Card>
+      <p className="state-word text-wet">흙이 이미 많이 젖어 있어요</p>
+      <p className="mt-1 text-sm text-ink-sub">
+        지금 물을 더 주면 뿌리가 숨을 못 쉬어요. 며칠 기다려주세요.
+      </p>
+      <button type="button" className="btn-primary mt-4 w-full" onClick={onClose}>
+        홈으로 돌아가기
+      </button>
+    </Card>
+  );
+}
+
+/**
+ * §11.3 / F-06 미연결·센서값 결측 진입 — 실시간 게이지 없이 권장량과 마지막 값만.
+ * R:1을 보내지 않고 `시작하기` 버튼도 노출하지 않는다.
+ */
+function StaticMode({
+  plantMl,
+  lastPct,
+  measuredAt,
+}: {
+  plantMl: number;
+  lastPct: number | null;
+  measuredAt: string | null;
+}) {
   return (
     <>
       <Banner tone="info" title="화분에 연결되어 있지 않아요">
-        연결하면 붓는 동안 실시간으로 "그만!"을 알려드려요. 지금은 권장량만 안내할게요.
+        연결하면 물을 주는 동안 실시간으로 알려드려요.
       </Banner>
       <Card>
         <p className="label">권장 급수량</p>
@@ -116,6 +165,18 @@ function StaticMode({ plantMl }: { plantMl: number }) {
         <p className="mt-2 text-sm text-ink-sub">
           한 번에 붓지 말고 3번에 나눠, 각 회차 사이에 30초씩 기다려주세요.
         </p>
+
+        <hr className="my-3 border-line" />
+
+        <div className="flex items-baseline justify-between">
+          <span className="text-xs font-bold text-ink-sub">마지막 측정</span>
+          <span className="text-sm font-bold text-ink">
+            {lastPct === null ? '기록 없음' : `토양 ${lastPct}%`}
+          </span>
+        </div>
+        {measuredAt ? (
+          <p className="mt-0.5 text-right text-[11px] text-ink-sub">{timeAgo(measuredAt)} 상태</p>
+        ) : null}
       </Card>
     </>
   );
@@ -146,8 +207,14 @@ function Pouring({ g }: { g: G }) {
       <RoundDots round={g.round} />
 
       <section className={`rounded-2xl p-4 ring-1 ring-line ${tone}`}>
+        {/*
+          F-01 판정은 절대 위치가 아니라 세션 시작 대비 변화량이다.
+          아직 물이 안 들어왔으면 "그만" 계열 문구를 절대 띄우지 않는다.
+        */}
         {g.band === 'wet' ? (
           <p className="state-word animate-shake text-wet">너무 많아요!</p>
+        ) : !g.hasRisen ? (
+          <p className="state-word text-warn">아직 반응이 없어요</p>
         ) : g.band === 'good' ? (
           <p className="state-word text-primary">그만! 딱 좋아요 👏</p>
         ) : (
@@ -157,9 +224,11 @@ function Pouring({ g }: { g: G }) {
         <p className="mt-1 text-sm text-ink-sub">
           {g.band === 'wet'
             ? '물이 너무 많으면 뿌리가 숨을 못 쉬어요. 지금 멈춰주세요.'
-            : g.band === 'good'
-              ? '목표 구간에 들어왔어요. 여기서 멈추면 완벽해요.'
-              : `${g.round}회차 · 약 ${g.perRoundMl}ml를 화분 중앙에 부어주세요.`}
+            : !g.hasRisen
+              ? `계속 부어주세요. ${g.round}회차 · 약 ${g.perRoundMl}ml를 화분 중앙에.`
+              : g.band === 'good'
+                ? '목표 구간에 들어왔어요. 여기서 멈추면 완벽해요.'
+                : `${g.round}회차 · 약 ${g.perRoundMl}ml를 화분 중앙에 부어주세요.`}
         </p>
 
         {g.stalled ? (

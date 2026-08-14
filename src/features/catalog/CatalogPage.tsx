@@ -13,6 +13,7 @@ import { Badge, Banner, Card } from '@/components/ui';
 import { PageHeader } from '@/components/AppLayout';
 import { PlantCharacter } from '@/features/character/PlantCharacter';
 import { PixelIcon } from '@/components/PixelIcon';
+import { useDevMode } from '@/features/dev/DevPanel';
 import type { Plant } from '@/ble/types';
 
 export default function CatalogPage() {
@@ -25,6 +26,7 @@ export default function CatalogPage() {
   const potId = usePotStore((s) => s.selectedPotId);
   const live = useConnectionStore(canControl);
   const deviceProfile = useConnectionStore((s) => s.deviceProfile);
+  const devMode = useDevMode();
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -149,7 +151,8 @@ export default function CatalogPage() {
         })}
       </ul>
 
-      {deviceProfile ? (
+      {/* F-07 내부 임계값은 개발용이다 */}
+      {devMode && deviceProfile ? (
         <p className="pt-1 text-center text-[11px] text-ink-sub">
           화분 저장값 · dry {deviceProfile.soilDry} / wet {deviceProfile.soilWet} / light{' '}
           {deviceProfile.lightMin}

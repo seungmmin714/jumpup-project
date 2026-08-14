@@ -64,11 +64,26 @@ const MOOD_STYLE: Record<Mood, MoodStyle> = {
   },
 };
 
-export const moodScene = (mood: Mood): string => MOOD_STYLE[mood].scene;
+/** 데이터가 없을 때 — 기분 7종 어느 것도 아닌 8번째 상태 (F-03) */
+const UNKNOWN_STYLE: MoodStyle = {
+  filter: 'saturate(0.35) brightness(0.98)',
+  animation: '',
+  particles: [],
+  scene: 'from-[#e2ded3] via-[#ece7da] to-[#ddd5c4]',
+};
+
+const UNKNOWN_INFO = {
+  name: '연결 대기',
+  face: '(・_・)',
+} as const;
+
+export const moodScene = (mood: Mood | null): string =>
+  (mood === null ? UNKNOWN_STYLE : MOOD_STYLE[mood]).scene;
 
 interface Props {
   plant: Plant;
-  mood: Mood;
+  /** null = 아직 데이터가 없음. mood 0(정상)과 반드시 구분한다 (F-03) */
+  mood: Mood | null;
   /** 실시간이 아니면 흐리게 — 지금 상태가 아님을 알린다 */
   stale?: boolean;
   size?: 'sm' | 'md' | 'lg';
@@ -95,10 +110,11 @@ export function PlantCharacter({
   celebrating = false,
   fill = false,
 }: Props) {
-  const src = plant.characterMoodImages?.[mood] ?? plant.characterImage;
+  const src = (mood !== null ? plant.characterMoodImages?.[mood] : undefined) ?? plant.characterImage;
   const [failed, setFailed] = useState(false);
-  const style = MOOD_STYLE[mood];
-  const info = moodInfo(mood);
+  // 데이터가 없을 때는 기분을 흉내내지 않는다 — 색도 움직임도 중립으로 둔다
+  const style = mood === null ? UNKNOWN_STYLE : MOOD_STYLE[mood];
+  const info = mood === null ? UNKNOWN_INFO : moodInfo(mood);
 
   // 식물을 바꾸면 다시 시도한다
   useEffect(() => setFailed(false), [src]);

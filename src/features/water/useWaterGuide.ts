@@ -16,12 +16,21 @@ export const SOAK_WAIT_MS = 30_000;
 export const TOTAL_ROUNDS = 3;
 /** §11.3 급수 완료 후 30분 내 재진입이면 확인 단계 */
 export const RECENT_WATER_MS = 30 * 60_000;
+/**
+ * F-01 급수로 인정하는 최소 변화량(원시값).
+ * 절대 위치로 판정하면 이미 촉촉한 흙에서 시작할 때 물을 붓기도 전에
+ * "그만! 딱 좋아요"가 떠 버린다. 세션 시작값(baseline) 대비 변화를 본다.
+ */
+const MIN_RISE_RAW = 20;
+
 /** §11.2 60초간 변화가 없으면 안내 */
 const NO_CHANGE_MS = 60_000;
 const NO_CHANGE_EPSILON = 6; // raw 기준
 
 export type WaterPhase =
   | 'confirm-recent' // 방금 물을 줬어요 — 정말 더 줄까요?
+  | 'confirm-moist' // F-02 흙이 이미 촉촉함 — 그래도 줄까요?
+  | 'blocked-wet' // F-02 과습 — 진입 차단
   | 'intro' // 권장량 안내
   | 'pour' // 붓는 중 (실시간 게이지)
   | 'soak' // 30초 스며드는 중
@@ -48,6 +57,12 @@ export interface WaterGuide {
   stalled: boolean;
   /** 목표 구간에 처음 진입한 순간 true (햅틱 트리거용) */
   reachedTarget: boolean;
+  /** 세션 시작 시점의 원시값. 종료 시 폐기한다 */
+  baselineRaw: number | null;
+  /** 세션 시작 이후 늘어난 양(원시값 감소분). 아직 안 부었으면 0 */
+  risenRaw: number;
+  /** 물이 실제로 들어왔다고 볼 만큼 값이 움직였는가 */
+  hasRisen: boolean;
   overWatered: boolean;
   live: boolean;
 
@@ -77,9 +92,21 @@ export function useWaterGuide(): WaterGuide {
   const recentlyWatered =
     lastWateredAt !== null && Date.now() - Date.parse(lastWateredAt) < RECENT_WATER_MS;
 
-  const [phase, setPhase] = useState<WaterPhase>(() =>
-    !live ? 'static' : recentlyWatered ? 'confirm-recent' : 'intro',
-  );
+  /**
+   * F-02 진입 가드.
+   * 과습이 이 제품의 주된 실패 모드라 관성이 "안 주는 쪽"을 향하게 한다.
+   * 우선순위: 미연결 → 과습 차단 → 최근 급수 → 촉촉함 확인 → 안내
+   */
+  const [phase, setPhase] = useState<WaterPhase>(() => {
+    if (!live) return 'static';
+    const raw = latest?.soilRaw ?? null;
+    if (raw === null) return 'static'; // 센서값 결측도 정적 안내로
+    const entryBand = soilBand(raw, plant.soilDry, plant.soilWet);
+    if (entryBand === 'wet') return 'blocked-wet';
+    if (recentlyWatered) return 'confirm-recent';
+    if (entryBand === 'good') return 'confirm-moist';
+    return 'intro';
+  });
   const [round, setRound] = useState(1);
   const [verdict, setVerdict] = useState<WaterVerdict | null>(null);
   const [startedPct, setStartedPct] = useState<number | null>(null);
@@ -88,11 +115,17 @@ export function useWaterGuide(): WaterGuide {
   const [fastSamplingOn, setFastSamplingOn] = useState(false);
   const [stalled, setStalled] = useState(false);
   const [reachedTarget, setReachedTarget] = useState(false);
+  const [baselineRaw, setBaselineRaw] = useState<number | null>(null);
 
   const soilRaw = latest?.soilRaw ?? null;
   const soilPct = toSoilMoisture(soilRaw);
   const band = soilBand(soilRaw, plant.soilDry, plant.soilWet);
   const overWatered = band === 'wet';
+
+  // F-01 판정의 기준은 절대 위치가 아니라 세션 시작 대비 변화량이다.
+  // soilRaw는 클수록 건조하므로 물을 부으면 값이 감소한다.
+  const risenRaw = baselineRaw === null || soilRaw === null ? 0 : Math.max(0, baselineRaw - soilRaw);
+  const hasRisen = risenRaw >= MIN_RISE_RAW;
   const perRoundMl = Math.round(plant.waterMl / TOTAL_ROUNDS / 10) * 10;
 
   const startedAt = useRef<number | null>(null);
@@ -111,6 +144,7 @@ export function useWaterGuide(): WaterGuide {
     [live],
   );
 
+  // 차단·확인 단계에서는 R:1을 보내지 않는다 (F-02 DoD)
   const isActive = phase === 'pour' || phase === 'soak' || phase === 'check';
 
   useEffect(() => {
@@ -185,7 +219,8 @@ export function useWaterGuide(): WaterGuide {
   // ── 목표 진입 / 초과 감지 (§11.1 4·5단계) ────────────────────
   useEffect(() => {
     if (!isActive || band === null) return;
-    if (band === 'good' && !targetHit.current) {
+    // 아직 물이 들어오지 않았으면 "그만" 계열 문구를 띄우지 않는다
+    if (band === 'good' && hasRisen && !targetHit.current) {
       targetHit.current = true;
       setReachedTarget(true);
       vibrate([60, 40, 60]); // "그만! 딱 좋아요"
@@ -193,7 +228,7 @@ export function useWaterGuide(): WaterGuide {
     if (band === 'wet') {
       vibrate([180, 80, 180]); // "너무 많아요!"
     }
-  }, [band, isActive]);
+  }, [band, isActive, hasRisen]);
 
   // ── 완료 처리 ────────────────────────────────────────────────
   const complete = useCallback(
@@ -202,6 +237,7 @@ export function useWaterGuide(): WaterGuide {
       completed.current = true;
       setVerdict(v);
       setPhase('done');
+      setBaselineRaw(null); // F-01 세션 종료 — baseline 폐기
       void setFast(false);
 
       const at = new Date().toISOString();
@@ -228,11 +264,12 @@ export function useWaterGuide(): WaterGuide {
     completed.current = false;
     targetHit.current = false;
     setStartedPct(soilPct);
+    setBaselineRaw(soilRaw); // F-01 세션 시작값
     setVerdict(null);
     setRound(1);
     setReachedTarget(false);
     setPhase('pour');
-  }, [soilPct]);
+  }, [soilPct, soilRaw]);
 
   const proceedAnyway = useCallback(() => setPhase('intro'), []);
   const finishPour = useCallback(() => setPhase('soak'), []);
@@ -255,9 +292,9 @@ export function useWaterGuide(): WaterGuide {
   useEffect(() => {
     if (phase !== 'check') return;
     if (band === 'wet') complete('too-much');
-    else if (band === 'good') complete('perfect');
+    else if (band === 'good' && hasRisen) complete('perfect');
     // 'dry'면 사용자가 다음 회차로 진행한다
-  }, [phase, band, complete]);
+  }, [phase, band, hasRisen, complete]);
 
   return useMemo(
     () => ({
@@ -274,6 +311,9 @@ export function useWaterGuide(): WaterGuide {
       fastSamplingOn,
       stalled,
       reachedTarget,
+      baselineRaw,
+      risenRaw,
+      hasRisen,
       overWatered,
       live,
       begin,
@@ -286,7 +326,8 @@ export function useWaterGuide(): WaterGuide {
     }),
     [
       phase, round, verdict, soilRaw, soilPct, band, startedPct, perRoundMl, remainingMs,
-      soakRemainingMs, fastSamplingOn, stalled, reachedTarget, overWatered, live,
+      soakRemainingMs, fastSamplingOn, stalled, reachedTarget, baselineRaw, risenRaw, hasRisen,
+      overWatered, live,
       begin, proceedAnyway, finishPour, skipSoak, nextRound, complete, exit,
     ],
   );

@@ -61,8 +61,8 @@ export function FanToggle() {
           </p>
           <p className="text-[11px] text-ink-sub">
             {on
-              ? `${mmss(remaining)} 뒤 자동 제어로 돌아가요`
-              : '평소에는 화분이 알아서 켜고 꺼요'}
+              ? `켜짐 · ${mmss(remaining)} 뒤 자동 제어로 돌아가요`
+              : '꺼짐 · 평소에는 화분이 알아서 켜고 꺼요'}
           </p>
         </div>
         <button
@@ -72,13 +72,14 @@ export function FanToggle() {
           aria-label="환기팬 강제 가동"
           onClick={toggle}
           disabled={!live || inflight}
-          className={`tap relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-40 ${
-            on ? 'bg-primary' : 'bg-line'
+          className={`tap relative h-8 w-14 shrink-0 rounded-full ring-2 transition disabled:opacity-40 ${
+            on ? 'bg-primary ring-primary-dark' : 'bg-ink/30 ring-ink/40'
           }`}
         >
+          {/* F-10 OFF도 트랙이 충분히 어두워야 켜짐/꺼짐이 한눈에 구분된다 */}
           <span
-            className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${
-              on ? 'left-6' : 'left-1'
+            className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_2px_0_rgba(0,0,0,0.3)] transition-all ${
+              on ? 'left-7' : 'left-1'
             }`}
           />
         </button>
