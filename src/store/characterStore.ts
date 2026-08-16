@@ -70,6 +70,7 @@ export const useCharacterStore = create<CharacterStoreState>((set, get) => ({
       if (prevMood !== null && prevMood !== 0) {
         // 나쁜 기분 → 정상 복귀: 회복 연출 + 보너스 EXP
         get().celebrate('회복!', EXP_RECOVERY_BONUS);
+        void import('./questStore').then((m) => m.trackQuest('recover'));
       }
       set({ prevMood: 0, badMoodSince: null, gloomy: false });
       return;

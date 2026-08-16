@@ -8,6 +8,7 @@ import { useConnectionStore } from './connectionStore';
 import { useTelemetryStore } from './telemetryStore';
 import { DEFAULT_POT_ID, profileOf, selectedPlant, usePotStore } from './potStore';
 import { useRoomStore } from './roomStore';
+import { trackQuest } from './questStore';
 import { useCharacterStore } from './characterStore';
 import type { AckCode, PlantProfile } from '@/ble/types';
 
@@ -108,6 +109,7 @@ function registerConnectedPot(deviceName: string | null): void {
   if (pot.selectedPotId === potId) return;
 
   pot.addPot(potId, deviceName);
+  trackQuest('connect');
   // 연결 전에 꾸며 둔 방이 있으면 그대로 가져온다
   useRoomStore.getState().adoptRoom(DEFAULT_POT_ID, potId);
 }

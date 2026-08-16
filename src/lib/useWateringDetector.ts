@@ -13,6 +13,7 @@ import { useTelemetryStore } from '@/store/telemetryStore';
 import { selectedPlant, usePotStore } from '@/store/potStore';
 import { useCharacterStore, EXP_ON_WATER } from '@/store/characterStore';
 import { postCareLog } from '@/api/pots';
+import { trackQuest } from '@/store/questStore';
 
 /** 이 시간 안에 일어난 상승만 급수로 본다 */
 const WINDOW_MS = 60_000;
@@ -113,6 +114,7 @@ export function useWateringDetector(): WateringState {
 
       const at = new Date().toISOString();
       setLastWateredAt(at);
+      trackQuest('water');
       if (potId) {
         postCareLog(potId, {
           type: 'water',

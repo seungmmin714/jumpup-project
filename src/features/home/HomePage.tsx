@@ -14,6 +14,7 @@ import { SoilGauge } from '@/components/SoilGauge';
 import { CelebrationOverlay } from '@/features/character/Character';
 import { RoomScene } from '@/features/room/RoomScene';
 import { useRoomStore } from '@/store/roomStore';
+import { useQuestStore } from '@/store/questStore';
 import { SolutionCard } from './SolutionCard';
 import { LedSlider } from './LedSlider';
 import { PotPicker } from './PotPicker';
@@ -46,6 +47,10 @@ export default function HomePage() {
   // 구매해서 방에 놓은 아이템만 그린다
   const placedItems = useRoomStore((s) => s.placed[potId] ?? []);
   const character = useCharacterStore();
+  // 받을 보상이 있으면 퀘스트 버튼에 점을 찍는다
+  useQuestStore((s) => s.counts);
+  useQuestStore((s) => s.claimed);
+  const claimableQuests = useQuestStore.getState().claimableCount();
 
   useOfflineLatest();
   // 물 주기 버튼 대신, 토양 센서가 급수를 알아채면 캐릭터가 실시간으로 반응한다
@@ -101,7 +106,12 @@ export default function HomePage() {
       {/* §9.1 인벤토리 · 이벤트 — 상단 */}
       <div className="grid grid-cols-2 gap-2">
         <PillButton icon="backpack" label="인벤토리" disabled />
-        <PillButton icon="gift" label="이벤트" badge disabled />
+        <PillButton
+          icon="gift"
+          label="퀘스트"
+          badge={claimableQuests > 0}
+          onClick={() => navigate('/quest')}
+        />
       </div>
 
       {/* ② 온도 · 공기습도 · 조도 */}

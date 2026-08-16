@@ -5,6 +5,7 @@ import WaterPage from './features/water/WaterPage';
 import JournalPage from './features/journal/JournalPage';
 import CatalogPage from './features/catalog/CatalogPage';
 import ShopPage from './features/shop/ShopPage';
+import QuestPage from './features/quest/QuestPage';
 import PotEntryPage from './features/home/PotEntryPage';
 
 export function AppRoutes() {
@@ -19,6 +20,7 @@ export function AppRoutes() {
         <Route path="/journal" element={<JournalPage />} />
         <Route path="/catalog" element={<CatalogPage />} />
         <Route path="/shop" element={<ShopPage />} />
+        <Route path="/quest" element={<QuestPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

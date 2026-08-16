@@ -12,6 +12,7 @@ import { useConnectionStore } from '@/store/connectionStore';
 import { usePotStore } from '@/store/potStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { useRoomStore } from '@/store/roomStore';
+import { useQuestStore } from '@/store/questStore';
 import { SHOP_ORDER } from '@/features/room/roomCatalog';
 import { ROOM_LAYOUT } from '@/features/room/roomLayout';
 
@@ -734,5 +735,61 @@ describe('행복도 표정 (홈)', () => {
 
     const face = screen.getByAltText('많이 힘들어요') as HTMLImageElement;
     expect(face.getAttribute('src')).toBe('/sprites/happiness-0.png');
+  });
+});
+
+describe('퀘스트', () => {
+  beforeEach(() => {
+    useQuestStore.setState({ counts: {}, claimed: [] });
+    useRoomStore.setState({ owned: {}, placed: {}, points: 3000 });
+  });
+
+  it('홈 버튼이 "이벤트"가 아니라 "퀘스트"다', async () => {
+    await connectAndTick();
+    renderApp();
+
+    expect(screen.queryByText('이벤트')).toBeNull();
+    expect(screen.getByText('퀘스트')).toBeTruthy();
+  });
+
+  it('홈에서 퀘스트 화면으로 들어간다', async () => {
+    await connectAndTick();
+    renderApp();
+
+    fireEvent.click(screen.getByText('퀘스트').closest('button')!);
+    await flush(50);
+    expect(screen.getByText('첫 물 주기')).toBeTruthy();
+  });
+
+  it('연결하면 첫 퀘스트가 자동으로 완료된다', async () => {
+    usePotStore.setState({ pots: [], selectedPotId: null });
+    await connectAndTick();
+
+    expect(useQuestStore.getState().isComplete('first-connect')).toBe(true);
+  });
+
+  it('보상을 받으면 상점 포인트가 늘어난다', async () => {
+    act(() => useQuestStore.getState().track('water'));
+    renderApp('/quest');
+    await flush(50);
+
+    const before = useRoomStore.getState().points;
+    const card = screen.getByText('첫 물 주기').closest('li')!;
+    fireEvent.click(within(card).getByRole('button', { name: '보상 받기' }));
+    await flush(50);
+
+    expect(useRoomStore.getState().points).toBeGreaterThan(before);
+    expect(screen.getAllByText('보상 받음').length).toBeGreaterThan(0);
+  });
+
+  it('시연 기준 유지 — 퀘스트 없이도 상점에서 바로 구매된다', async () => {
+    await connectAndTick();
+    renderApp('/shop');
+
+    const card = screen.getByText('나무 선반').closest('div')!;
+    fireEvent.click(within(card).getByRole('button', { name: '구매하기' }));
+    await flush(50);
+
+    expect(useRoomStore.getState().owned['growme01']).toContain('shelf');
   });
 });

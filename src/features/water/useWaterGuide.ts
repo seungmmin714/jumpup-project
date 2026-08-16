@@ -10,6 +10,7 @@ import { useTelemetryStore } from '@/store/telemetryStore';
 import { selectedPlant, usePotStore } from '@/store/potStore';
 import { EXP_ON_WATER, useCharacterStore } from '@/store/characterStore';
 import { postCareLog } from '@/api/pots';
+import { trackQuest } from '@/store/questStore';
 
 /** §11.2 물이 스며들어 센서에 닿기까지 걸리는 시간 */
 export const SOAK_WAIT_MS = 30_000;
@@ -242,6 +243,7 @@ export function useWaterGuide(): WaterGuide {
 
       const at = new Date().toISOString();
       setLastWateredAt(at);
+      trackQuest('water');
 
       if (potId) {
         postCareLog(potId, {

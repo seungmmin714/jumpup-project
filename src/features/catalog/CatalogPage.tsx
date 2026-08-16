@@ -14,6 +14,7 @@ import { PageHeader } from '@/components/AppLayout';
 import { PlantCharacter } from '@/features/character/PlantCharacter';
 import { PixelIcon } from '@/components/PixelIcon';
 import { useDevMode } from '@/features/dev/DevPanel';
+import { trackQuest } from '@/store/questStore';
 import type { Plant } from '@/ble/types';
 
 export default function CatalogPage() {
@@ -38,6 +39,7 @@ export default function CatalogPage() {
 
   const apply = async (p: Plant) => {
     setPlant(p.plantId);
+    trackQuest('plant');
     if (potId) setPotPlant(potId, p.plantId);
     setMsg(null);
     if (!live) {

@@ -84,11 +84,15 @@ export const useRoomStore = create<RoomState>()(
           owned: { ...s.owned, [potId]: add(s.owned[potId], id) },
           placed: { ...s.placed, [potId]: add(s.placed[potId], id) },
         }));
+        void import('./questStore').then((m) => m.trackQuest('decorate'));
         return 'ok';
       },
 
-      place: (potId, id) =>
-        set((s) => ({ placed: { ...s.placed, [potId]: add(s.placed[potId], id) } })),
+      place: (potId, id) => {
+        set((s) => ({ placed: { ...s.placed, [potId]: add(s.placed[potId], id) } }));
+        // 순환 import를 피하려고 동적으로 부른다
+        void import('./questStore').then((m) => m.trackQuest('decorate'));
+      },
 
       remove: (potId, id) =>
         set((s) => ({
